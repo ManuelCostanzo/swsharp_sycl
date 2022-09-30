@@ -27,3 +27,7 @@
 - *databases*: contains scripts to download database and sequences of both proteins and dna.
 - *dpct_original_output*: contains the original output of the `oneAPI dpct tool` after migration.
 - *scripts*: contains tests scripts
+
+## References
+
+Costanzo. M, Rucci. E, García. C, Naiouf. M, and Prieto-Matias M. 2022. Migrating CUDA to oneAPI: A Smith-Waterman Case Study. In Bioinformatics and Biomedical Engineering: 9th International Work-Conference, IWBBIO 2022, Maspalomas, Gran Canaria, Spain, June 27–30, 2022, Proceedings, Part II. Springer-Verlag, Berlin, Heidelberg, 103–116. https://doi.org/10.1007/978-3-031-07802-6_9
