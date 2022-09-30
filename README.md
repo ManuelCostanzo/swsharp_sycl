@@ -17,9 +17,9 @@ SW#SYCL contains a `builder` folder with all the necessary tools to compile with
 
 ## Usage
 - *Proteins*
-	- ./bin/swsharpd .. (same SW# flags)
+	- `./bin/swsharpd .. (same SW# flags)`
 - *DNA*
-	- ./bin/swsharpn .. (same SW# flags)
+	- `./bin/swsharpn .. (same SW# flags)`
 
 
 ## FOLDERS
