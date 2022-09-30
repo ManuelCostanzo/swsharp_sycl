@@ -20,7 +20,7 @@
 	- `./bin/swsharpn .. (same SW# flags)`
 
 
-## FOLDERS
+## Folders
 - *Builder*: contains all the prerequisite software
 - *CUDA*: SW# project with some modifications
 - *SYCL*: SW#SYCL project.
