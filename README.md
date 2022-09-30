@@ -8,11 +8,10 @@ SW#SYCL contains a `builder` folder with all the necessary tools to compile with
 
 
 ## Build
-- *SYCL*
- - Compilation for Intel LLVM `BACK=intel make`
- - Compilation for hipSYCL `BACK=hip make`
- - Compilation for DPC++ `BACK=dpcpp make`
-- *CUDA*: make
+- Compilation for Intel LLVM `BACK=intel make`
+- Compilation for hipSYCL `BACK=hip make`
+- Compilation for DPC++ `BACK=dpcpp make`
+- *Compilation CUDA*: make
 
 ## Usage
 - *Proteins*
