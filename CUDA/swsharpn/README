@@ -1,0 +1,44 @@
+Swsharpn is a CUDA-GPU based tool for performing Smith-Waterman alignment on 
+nucleotides.
+
+usage: swsharpn -i <query file> -j <target file> [arguments ...]
+
+arguments:
+    -i, --query <file>
+        (required)
+        input fasta query file
+    -j, --target <file>
+        (required)
+        input fasta target file
+    -g, --gap-open <int>
+        default: 5
+        gap opening penalty, must be given as a positive integer 
+    -e, --gap-extend <int>
+        default: 2
+        gap extension penalty, must be given as a positive integer
+    --match <int>
+        default: 1
+        match score, must be given as a positive integer
+    --mismatch <int>
+        default: -3
+        mismatch penalty, must be given as a negative integer
+    --cards <ints>
+        default: all available CUDA cards
+        list of cards should be given as an array of card indexes delimited with
+        nothing, for example usage of first two cards is given as --cards 01
+    --score
+        if given only the score without the alignment is outputed, also
+        --outfmt option is ignored
+    --out <string>
+        default: stdout
+        output file for the alignment
+    --outfmt <string>
+        default: pair-stat
+        out format for the output file, must be one of the following: 
+            pair      - emboss pair output format 
+            pair-stat - combination of pair and stat output
+            plot      - output used for plotting alignment with gnuplot 
+            stat      - statistics of the alignment
+            dump      - binary format for usage with swsharpout
+    -h, -help
+        prints out the help

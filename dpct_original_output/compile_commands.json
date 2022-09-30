@@ -1,0 +1,183 @@
+[
+    {
+        "command": "nvcc grep sm_13 -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "nvcc grep sm_20 -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "nvcc grep sm_30 -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "nvcc grep sm_35 -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "nvcc grep sm_37 -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "nvcc grep sm_50 -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "nvcc grep sm_52 -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "nvcc grep sm_53 -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "nvcc -D__CUDACC__=1",
+        "directory": "/home/u156642/swsharp/swsharp"
+    },
+    {
+        "command": "c++ -c -o obj/swimd/Swimd.o -Isrc -O3 -Wall src/swimd/Swimd.cpp",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/swimd/Swimd.cpp"
+    },
+    {
+        "command": "nvcc -c  -o obj/score_database_gpu_long.o -Isrc -O3 -D__CUDACC__=1 src/score_database_gpu_long.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/score_database_gpu_long.cu"
+    },
+    {
+        "command": "cc -c -o obj/chain.o -Isrc -O3 -Wall src/chain.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/chain.c"
+    },
+    {
+        "command": "cc -c -o obj/db_alignment.o -Isrc -O3 -Wall src/db_alignment.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/db_alignment.c"
+    },
+    {
+        "command": "nvcc -c  -o obj/nw_find_score_gpu.o -Isrc -O3 -D__CUDACC__=1 src/nw_find_score_gpu.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/nw_find_score_gpu.cu"
+    },
+    {
+        "command": "nvcc -c  -o obj/sw_end_data_gpu.o -Isrc -O3 -D__CUDACC__=1 src/sw_end_data_gpu.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/sw_end_data_gpu.cu"
+    },
+    {
+        "command": "cc -c -o obj/pre_proc.o -Isrc -O3 -Wall src/pre_proc.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/pre_proc.c"
+    },
+    {
+        "command": "cc -c -o obj/constants.o -Isrc -O3 -Wall src/constants.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/constants.c"
+    },
+    {
+        "command": "nvcc -c  -o obj/gpu_module.o -Isrc -O3 -D__CUDACC__=1 src/gpu_module.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/gpu_module.cu"
+    },
+    {
+        "command": "cc -c -o obj/ssw/ssw.o -Isrc -O3 -Wall src/ssw/ssw.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/ssw/ssw.c"
+    },
+    {
+        "command": "cc -c -o obj/threadpool.o -Isrc -O3 -Wall src/threadpool.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/threadpool.c"
+    },
+    {
+        "command": "cc -c -o obj/post_proc.o -Isrc -O3 -Wall src/post_proc.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/post_proc.c"
+    },
+    {
+        "command": "nvcc -c  -o obj/evalue.o -Isrc -O3 -D__CUDACC__=1 src/evalue.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/evalue.cu"
+    },
+    {
+        "command": "nvcc -c  -o obj/nw_linear_data_gpu.o -Isrc -O3 -D__CUDACC__=1 src/nw_linear_data_gpu.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/nw_linear_data_gpu.cu"
+    },
+    {
+        "command": "nvcc -c  -o obj/score_database_gpu_short.o -Isrc -O3 -D__CUDACC__=1 src/score_database_gpu_short.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/score_database_gpu_short.cu"
+    },
+    {
+        "command": "nvcc -c  -o obj/score_database_gpu.o -Isrc -O3 -D__CUDACC__=1 src/score_database_gpu.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/score_database_gpu.cu"
+    },
+    {
+        "command": "cc -c -o obj/scorer.o -Isrc -O3 -Wall src/scorer.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/scorer.c"
+    },
+    {
+        "command": "cc -c -o obj/reconstruct.o -Isrc -O3 -Wall src/reconstruct.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/reconstruct.c"
+    },
+    {
+        "command": "cc -c -o obj/utils.o -Isrc -O3 -Wall src/utils.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/utils.c"
+    },
+    {
+        "command": "cc -c -o obj/database.o -Isrc -O3 -Wall src/database.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/database.c"
+    },
+    {
+        "command": "cc -c -o obj/cpu_module.o -Isrc -O3 -Wall src/cpu_module.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/cpu_module.c"
+    },
+    {
+        "command": "cc -c -o obj/thread.o -Isrc -O3 -Wall src/thread.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/thread.c"
+    },
+    {
+        "command": "cc -c -o obj/sse_module.o -Isrc -O3 -Wall src/sse_module.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/sse_module.c"
+    },
+    {
+        "command": "nvcc -c  -o obj/cuda_utils.o -Isrc -O3 -D__CUDACC__=1 src/cuda_utils.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/cuda_utils.cu"
+    },
+    {
+        "command": "nvcc -c  -o obj/hw_end_data_gpu.o -Isrc -O3 -D__CUDACC__=1 src/hw_end_data_gpu.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/hw_end_data_gpu.cu"
+    },
+    {
+        "command": "nvcc -c  -o obj/ov_end_data_gpu.o -Isrc -O3 -D__CUDACC__=1 src/ov_end_data_gpu.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/ov_end_data_gpu.cu"
+    },
+    {
+        "command": "cc -c -o obj/alignment.o -Isrc -O3 -Wall src/alignment.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/alignment.c"
+    },
+    {
+        "command": "cc -c -o obj/align.o -Isrc -O3 -Wall src/align.c",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/align.c"
+    },
+    {
+        "command": "nvcc -c  -o obj/ov_find_score_gpu.o -Isrc -O3 -D__CUDACC__=1 src/ov_find_score_gpu.cu",
+        "directory": "/home/u156642/swsharp/swsharp",
+        "file": "/home/u156642/swsharp/swsharp/src/ov_find_score_gpu.cu"
+    }
+]

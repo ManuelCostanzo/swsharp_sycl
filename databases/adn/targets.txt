@@ -1,0 +1,10 @@
+AY352275.1.fasta
+AF494279.1.fasta
+NC_007605.fasta
+NC_000914.1.fasta
+AE002160.2.fasta
+BX927147.1.fasta
+AE017225.1.fasta
+NC_003997.3.fasta
+NC_014318.1.fasta
+NT_037436.3.fasta

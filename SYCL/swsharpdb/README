@@ -1,0 +1,64 @@
+usage: swsharpdb -i <query db file> -j <target db file> [arguments ...]
+
+arguments:
+    -i, --query <file>
+        (required)
+        input fasta database query file
+    -j, --target <file>
+        (required)
+        input fasta database target file
+    -g, --gap-open <int>
+        default: 10
+        gap opening penalty, must be given as a positive integer 
+    -e, --gap-extend <int>
+        default: 1
+        gap extension penalty, must be given as a positive integer and
+        must be less or equal to gap opening penalty
+    --matrix <string>
+        default: BLOSUM_62
+        similarity matrix, can be one of the following:
+            BLOSUM_45
+            BLOSUM_50
+            BLOSUM_62
+            BLOSUM_80
+            BLOSUM_90
+            BLOSUM_30
+            BLOSUM_70
+            BLOSUM_250
+            EDNA_FULL
+    --evalue <float>
+        default: 10.0
+        evalue threshold, alignments with higher evalue are filtered,
+        must be given as a positive float
+    --max-aligns <int>
+        default: 10
+        maximum number of alignments to be outputted
+    --algorithm <string>
+        default: SW
+        algorithm used for alignment, must be one of the following: 
+            SW - Smith-Waterman local alignment
+            NW - Needleman-Wunsch global alignment
+            HW - semiglobal alignment
+            OV - overlap alignment
+    --cards <ints>
+        default: all available CUDA cards
+        list of cards should be given as an array of card indexes delimited with
+        nothing, for example usage of first two cards is given as --cards 01
+    --out <string>
+        default: stdout
+        output file for the alignment
+    --outfmt <string>
+        default: bm9
+        out format for the output file, must be one of the following:
+            bm0      - blast m0 output format
+            bm8      - blast m8 tabular output format
+            bm9      - blast m9 commented tabular output format
+            light    - score-name tabbed output
+    --nocache
+        serialized database is stored to speed up future runs with the
+        same database, option disables this behaviour
+    --cpu
+        only cpu is used
+    -h, -help
+        prints out the help
+

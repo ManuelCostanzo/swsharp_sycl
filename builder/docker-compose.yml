@@ -1,0 +1,21 @@
+version: "3"
+services:
+  oneapi:
+    container_name: oneapi
+    build:
+      context: ../
+      dockerfile: ./builder/Dockerfile
+    volumes:
+      - ../:/app
+      - /tmp:/tmp
+      - ~/.bash_history:/root/.bash_history
+    tty: true
+    stdin_open: true
+    network_mode: "host"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
