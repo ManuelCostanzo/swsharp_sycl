@@ -22,7 +22,7 @@ There is a `builder` folder with all the necessary tools to compile with [Intel 
 
 ## Folders
 - *Builder*: contains all the prerequisite software
-- *CUDA*: SW# project with some modifications
+- *CUDA*: SW# project with a few improvements
 - *SYCL*: SW#SYCL project.
 - *databases*: contains scripts to download database and sequences of both proteins and dna.
 - *dpct_original_output*: contains the original output of the `oneAPI dpct tool` after migration.
