@@ -368,7 +368,7 @@ extern size_t shortDatabaseGpuMemoryConsumption(Chain **database,
     int blocks = length / sequencesCols + (length % sequencesCols > 0);
     int hBusHeight = maxHeight * 4;
 
-    //##########################################################################
+    // ##########################################################################
 
     const int bucketDiff = 32;
     int bucketsLen = maxLen / bucketDiff + (maxLen % bucketDiff > 0);
@@ -407,7 +407,7 @@ extern size_t shortDatabaseGpuMemoryConsumption(Chain **database,
 
     free(buckets);
 
-    //##########################################################################
+    // ##########################################################################
 
     size_t hBusSize = sequencesCols * hBusHeight * sizeof(sycl::int2);
     size_t offsetsSize = blocks * sizeof(int);
@@ -777,7 +777,7 @@ try
     dev_q.memcpy(lengthsGpu, lengths, lengthsSize).wait();
 
     int *lengthsPaddedGpu = sycl::malloc_device<int>(blocks * sequencesCols, dev_q);
-    dev_q.memcpy(lengthsPaddedGpu, lengthsPadded, lengthsSize).wait();
+    dev_q.memcpy(lengthsPaddedGpu, lengthsPadded, indexesSize).wait();
 
     int *sequencesGpu = sycl::malloc_device<int>(sequencesCols * sequencesRows, dev_q);
     dev_q.memcpy(sequencesGpu, sequences, sequencesCols * sequencesRows * sizeof(int)).wait();
@@ -1104,21 +1104,23 @@ static void scoreDatabaseMulti(int *scores, int type,
     KernelContextCpu *contextsCpu = (KernelContextCpu *)malloc(cpuContextsSize);
 
     Thread *tasksCpu = (Thread *)malloc(queriesLen * sizeof(Thread));
-
-    for (int i = 0; i < queriesLen; ++i)
+    if (withThreads())
     {
+        for (int i = 0; i < queriesLen; ++i)
+        {
 
-        contextsCpu[i].scores = scores + i * databaseLen;
-        contextsCpu[i].type = type;
-        contextsCpu[i].query = queries[i];
-        contextsCpu[i].shortDatabase = shortDatabase;
-        contextsCpu[i].scorer = scorer;
-        contextsCpu[i].indexes = indexes;
-        contextsCpu[i].indexesLen = indexesLen;
-        contextsCpu[i].maxScore = maxScore;
-        contextsCpu[i].cpuGpuSync = &(cpuGpuSyncs[i]);
+            contextsCpu[i].scores = scores + i * databaseLen;
+            contextsCpu[i].type = type;
+            contextsCpu[i].query = queries[i];
+            contextsCpu[i].shortDatabase = shortDatabase;
+            contextsCpu[i].scorer = scorer;
+            contextsCpu[i].indexes = indexes;
+            contextsCpu[i].indexesLen = indexesLen;
+            contextsCpu[i].maxScore = maxScore;
+            contextsCpu[i].cpuGpuSync = &(cpuGpuSyncs[i]);
 
-        threadCreate(&(tasksCpu[i]), kernelThreadCpu, &(contextsCpu[i]));
+            threadCreate(&(tasksCpu[i]), kernelThreadCpu, &(contextsCpu[i]));
+        }
     }
 
     //**************************************************************************
@@ -1161,9 +1163,12 @@ static void scoreDatabaseMulti(int *scores, int type,
     //**************************************************************************
     // WAIT FOR CPU
 
-    for (int i = 0; i < queriesLen; ++i)
+    if (withThreads())
     {
-        threadJoin(tasksCpu[i]);
+        for (int i = 0; i < queriesLen; ++i)
+        {
+            threadJoin(tasksCpu[i]);
+        }
     }
 
     //**************************************************************************
@@ -1177,11 +1182,14 @@ static void scoreDatabaseMulti(int *scores, int type,
         mutexDelete(&(gpuSyncs[i].mutex));
         mutexDelete(&(cpuGpuSyncs[i].mutex));
     }
+    if (withThreads())
+    {
+        free(tasksCpu);
+        free(contextsCpu);
+    }
 
     free(tasksGpu);
-    free(tasksCpu);
     free(contextsGpu);
-    free(contextsCpu);
     free(profiles);
     free(gpuSyncs);
     free(cpuGpuSyncs);
@@ -1331,7 +1339,10 @@ static void *kernelsThread(void *param)
         cpuContext.scores = scores;
         cpuContext.query = query;
 
-        threadCreate(&thread, kernelThreadCpu, &cpuContext);
+        if (withThreads())
+        {
+            threadCreate(&thread, kernelThreadCpu, &cpuContext);
+        }
 
         // init specifix gpu and run
         gpuContext.scores = scores;
@@ -1340,7 +1351,10 @@ static void *kernelsThread(void *param)
         kernelThreadShort(&gpuContext);
 
         // wait for cpu
-        threadJoin(thread);
+        if (withThreads())
+        {
+            threadJoin(thread);
+        }
 
         // clean memory
         deleteQueryProfile(gpuContext.queryProfile);
@@ -1482,7 +1496,6 @@ try
         int block;
         if (gpuSync == NULL)
         {
-
             // no need to sync
             block = blocksLast;
             blocksLast += blocksStep;
@@ -1513,13 +1526,13 @@ try
         mutexLock(&(cpuGpuSync->mutex));
 
         // indexes already solved
-        if (firstIdx >= cpuGpuSync->firstCpu)
+        if (firstIdx >= lastIdx)
         {
             mutexUnlock(&(cpuGpuSync->mutex));
             break;
         }
 
-        indexesLenLocal = std::min(lastIdx, cpuGpuSync->firstCpu);
+        indexesLenLocal = withThreads() ? std::min(lastIdx, cpuGpuSync->firstCpu) : lastIdx;
         cpuGpuSync->lastGpu = indexesLenLocal;
 
         mutexUnlock(&(cpuGpuSync->mutex));

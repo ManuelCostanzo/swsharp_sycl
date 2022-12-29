@@ -43,7 +43,7 @@ Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.un
 #define THREADS 64
 #define BLOCKS 240
 
-#define MAX_THREADS THREADS
+#define MAX_THREADS 1024
 
 #define INT4_ZERO make_int4(0, 0, 0, 0)
 #define INT4_SCORE_MIN make_int4(SCORE_MIN, SCORE_MIN, SCORE_MIN, SCORE_MIN)
@@ -1562,7 +1562,7 @@ __device__ void swSolveSingle(int id, char *codes, int *starts, int *lengths,
                               int *scores, int2 *hBus)
 {
 
-    __shared__ int scoresShr[MAX_THREADS];
+    __shared__ int scoresShr[MAX_THREADS + 1];
 
     __shared__ int hBusScrShr[MAX_THREADS + 1];
     __shared__ int hBusAffShr[MAX_THREADS + 1];

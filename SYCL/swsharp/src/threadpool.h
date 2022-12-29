@@ -41,6 +41,8 @@ extern "C"
 
   typedef struct ThreadPoolTask ThreadPoolTask;
 
+  extern int withThreads();
+
   extern int threadPoolInitialize(int n);
 
   extern void threadPoolTerminate();

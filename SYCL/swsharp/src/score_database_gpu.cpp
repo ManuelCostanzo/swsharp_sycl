@@ -449,7 +449,11 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
     TIMER_START("Database solving GPU");
 
     Thread thread;
-    threadCreate(&thread, scoreCpu, (void *)&contextCpu);
+
+    if (withThreads())
+    {
+        threadCreate(&thread, scoreCpu, (void *)&contextCpu);
+    }
 
     if (useGpu)
     {
@@ -469,18 +473,22 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
 
         TIMER_STOP;
 
-        mutexLock(contextCpu.mutex);
+        int longInexesSolved;
+        if (withThreads())
+        {
+            mutexLock(contextCpu.mutex);
 
-        int longInexesSolved = contextCpu.lastIndexSolved;
-        contextCpu.cancelled = 1;
+            longInexesSolved = contextCpu.lastIndexSolved;
+            contextCpu.cancelled = 1;
 
-        mutexUnlock(contextCpu.mutex);
+            mutexUnlock(contextCpu.mutex);
+        }
 
         LOG("Long indexes solved CPU: %d", longInexesSolved);
 
         TIMER_START("Long solve");
 
-        if (longInexesSolved < longIndexesNewLen)
+        if ((!withThreads() && longIndexesLen < longIndexesNewLen) || (withThreads() longInexesSolved < longIndexesNewLen))
         {
             scoreLongDatabasesGpu(scores, type, queries, queriesLen,
                                   longDatabase, scorer, longIndexesNew + longInexesSolved,
@@ -490,7 +498,10 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
         TIMER_STOP;
     }
 
-    threadJoin(thread);
+    if (withThreads())
+    {
+        threadJoin(thread);
+    }
 
     TIMER_STOP;
 

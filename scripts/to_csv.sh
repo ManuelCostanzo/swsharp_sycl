@@ -2,12 +2,12 @@ run() {
     echo "$D;QUERY;CUDA (seg);SYCL (seg);CUDA (gflop);SYCL (gflop); CUDA PROM; SYCL PROM" >> $FILE
     for i in `seq 1 $ITERS`;
     do
-        CUDA_SEG=`cat "$CURRENT_PATH/$query"_cuda.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
-        ONEAPI_SEG=`cat "$CURRENT_PATH/$query"_oneapi.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
+        CUDA_SEG=`cat "$CURRENT_PATH/$query"_CUDA.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
+        SYCL_SEG=`cat "$CURRENT_PATH/$query"_SYCL.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
         GFLOPS_CUDA=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($CUDA_SEG * 1000000000))"`
-        GFLOPS_ONEAPI=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($ONEAPI_SEG * 1000000000))"`
+        GFLOPS_SYCL=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($SYCL_SEG * 1000000000))"`
         PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -2))))"
-        ROW=";$ID;$CUDA_SEG;$ONEAPI_SEG;$GFLOPS_CUDA;$GFLOPS_ONEAPI"
+        ROW=";$ID;$CUDA_SEG;$SYCL_SEG;$GFLOPS_CUDA;$GFLOPS_SYCL"
         if [ "$i" == 1 ]; then
             ROW="$ROW; $PROM; $PROM"
         fi
@@ -123,15 +123,15 @@ G6() {
         TARGET=`head -n $j ../../databases/adn/targets.txt | tail -n 1 | sed s/".fasta"//`
         QUERY_LEN=`cat "$CURRENT_PATH"/"$j"_cuda.txt | grep "Query length:" | egrep -o '[0-9.]+' | head -1`
         TARGET_LEN=`cat "$CURRENT_PATH"/"$j"_cuda.txt | grep "Query length:" | egrep -o '[0-9.]+' | head -1`
-        echo "QUERY;TARGET;CUDA (seg);oneAPI (seg);CUDA (gflop);oneAPI (gflop); CUDA PROM; SYCL PROM" >> $FILE
+        echo "QUERY;TARGET;CUDA (seg);SYCL (seg);CUDA (gflop);SYCL (gflop); CUDA PROM; SYCL PROM" >> $FILE
         for i in `seq 1 $ITERS`;
         do
-            CUDA_SEG=`cat "$CURRENT_PATH"/"$j"_cuda.txt | grep  "TIME" | egrep -o '[0-9.]+' |  head -$i | tail -1`
-            ONEAPI_SEG=`cat "$CURRENT_PATH"/"$j"_oneapi.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
+            CUDA_SEG=`cat "$CURRENT_PATH"/"$j"_CUDA.txt | grep  "TIME" | egrep -o '[0-9.]+' |  head -$i | tail -1`
+            SYCL_SEG=`cat "$CURRENT_PATH"/"$j"_SYCL.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
             GFLOPS_CUDA=`perl -e "print (($QUERY_LEN * $TARGET_LEN ) / ($CUDA_SEG * 1000000000))"`
-            GFLOPS_ONEAPI=`perl -e "print (($QUERY_LEN * $TARGET_LEN ) / ($ONEAPI_SEG * 1000000000))"`
+            GFLOPS_SYCL=`perl -e "print (($QUERY_LEN * $TARGET_LEN ) / ($SYCL_SEG * 1000000000))"`
             PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -2))))"
-            ROW="$QUERY;$TARGET;$CUDA_SEG;$ONEAPI_SEG;$GFLOPS_CUDA;$GFLOPS_ONEAPI"
+            ROW="$QUERY;$TARGET;$CUDA_SEG;$SYCL_SEG;$GFLOPS_CUDA;$GFLOPS_SYCL"
             if [ "$i" == 1 ]; then
                 ROW="$ROW; $PROM; $PROM"
             fi
@@ -159,10 +159,10 @@ G9() {
         echo "QUERY;SYCL (seg);SYCL (gflop); SYCL PROM" >> $FILE
         for i in `seq 1 $ITERS`;
         do
-            ONEAPI_SEG=`cat "$CURRENT_PATH/$query"_oneapi.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
-            GFLOPS_ONEAPI=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($ONEAPI_SEG * 1000000000))"`
+            SYCL_SEG=`cat "$CURRENT_PATH/$query"_sycl.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
+            GFLOPS_SYCL=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($SYCL_SEG * 1000000000))"`
             PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -1)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -1))))"
-            ROW="$ID;$ONEAPI_SEG;$GFLOPS_ONEAPI"
+            ROW="$ID;$SYCL_SEG;$GFLOPS_SYCL"
             if [ "$i" == 1 ]; then
                 ROW="$ROW; $PROM"
             fi

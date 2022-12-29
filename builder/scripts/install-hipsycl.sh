@@ -23,6 +23,10 @@ if [ -d "$HIPSYCL_BUILD_DIR" ]; then
 else
 echo "Cloning hipSYCL"
 git clone --recurse-submodules -b $HIPSYCL_REPO_BRANCH https://github.com/$HIPSYCL_REPO_USER/hipSYCL $HIPSYCL_BUILD_DIR
+#wget https://github.com/illuhad/hipSYCL/archive/refs/tags/v0.9.3.zip -O /tmp/hipSYCL.zip
+#unzip /tmp/hipSYCL.zip -d /tmp
+#mv /tmp/hipSYCL-0.9.3 $HIPSYCL_BUILD_DIR
+
 
 fi
 

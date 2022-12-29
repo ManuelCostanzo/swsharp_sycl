@@ -755,8 +755,8 @@ static void *createDatabaseGpu(void *param)
     CUDA_SAFE_CALL(cudaMemcpy(lengthsGpu, lengths, lengthsSize, TO_GPU));
 
     int *lengthsPaddedGpu;
-    CUDA_SAFE_CALL(cudaMalloc(&lengthsPaddedGpu, lengthsSize));
-    CUDA_SAFE_CALL(cudaMemcpy(lengthsPaddedGpu, lengthsPadded, lengthsSize, TO_GPU));
+    CUDA_SAFE_CALL(cudaMalloc(&lengthsPaddedGpu, indexesSize));
+    CUDA_SAFE_CALL(cudaMemcpy(lengthsPaddedGpu, lengthsPadded, indexesSize, TO_GPU));
 
     cudaArray *sequencesGpu;
     cudaChannelFormatDesc channel = seqsTexture.channelDesc;

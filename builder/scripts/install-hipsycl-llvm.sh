@@ -23,8 +23,8 @@ if [ -d "$HIPSYCL_LLVM_BUILD_DIR" ]; then
 else
 
 echo "Cloning LLVM $HIPSYCL_PKG_LLVM_REPO_BRANCH"
-#git clone -b $HIPSYCL_PKG_LLVM_REPO_BRANCH https://github.com/llvm/llvm-project $HIPSYCL_LLVM_BUILD_DIR
-git clone https://github.com/llvm/llvm-project $HIPSYCL_LLVM_BUILD_DIR
+git clone -b $HIPSYCL_PKG_LLVM_REPO_BRANCH https://github.com/llvm/llvm-project $HIPSYCL_LLVM_BUILD_DIR
+#git clone https://github.com/llvm/llvm-project $HIPSYCL_LLVM_BUILD_DIR
 fi
 
 case $HIPSYCL_PKG_LLVM_VERSION in

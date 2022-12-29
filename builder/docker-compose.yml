@@ -1,7 +1,7 @@
 version: "3"
 services:
-  oneapi:
-    container_name: oneapi
+  sycl:
+    container_name: sycl
     build:
       context: ../
       dockerfile: ./builder/Dockerfile
@@ -18,4 +18,4 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu]
+              capabilities: [ gpu ]

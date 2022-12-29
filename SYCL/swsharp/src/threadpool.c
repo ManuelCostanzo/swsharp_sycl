@@ -68,6 +68,8 @@ static ThreadPool *threadPool = NULL;
 
 extern int threadPoolInitialize(int n);
 
+extern int withThreads();
+
 extern void threadPoolTerminate();
 
 extern ThreadPoolTask *threadPoolSubmit(void *(*routine)(void *), void *param);
@@ -92,7 +94,13 @@ static ThreadPoolTask *sumbit(void *(*routine)(void *), void *param, int toFront
 //******************************************************************************
 // PUBLIC
 
-extern int threadPoolInitialize(int n)
+extern int withThreads()
+{
+    return threadPool != NULL;
+}
+
+extern int
+threadPoolInitialize(int n)
 {
 
     if (threadPool != NULL)
