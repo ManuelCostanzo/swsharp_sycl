@@ -1181,12 +1181,9 @@ static void scoreDatabaseMulti(int *scores, int type,
         mutexDelete(&(gpuSyncs[i].mutex));
         mutexDelete(&(cpuGpuSyncs[i].mutex));
     }
-    if (withThreads())
-    {
-        free(tasksCpu);
-        free(contextsCpu);
-    }
 
+    free(tasksCpu);
+    free(contextsCpu);
     free(tasksGpu);
     free(contextsGpu);
     free(profiles);

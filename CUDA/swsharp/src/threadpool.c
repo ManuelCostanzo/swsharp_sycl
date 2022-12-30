@@ -66,6 +66,8 @@ static ThreadPool *threadPool = NULL;
 //******************************************************************************
 // PUBLIC
 
+extern int withThreads();
+
 extern int threadPoolInitialize(int n);
 
 extern void threadPoolTerminate();
@@ -91,6 +93,11 @@ static ThreadPoolTask *sumbit(void *(*routine)(void *), void *param, int toFront
 
 //******************************************************************************
 // PUBLIC
+
+extern int withThreads()
+{
+    return threadPool != NULL;
+}
 
 extern int threadPoolInitialize(int n)
 {
