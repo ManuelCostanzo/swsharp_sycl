@@ -1148,7 +1148,6 @@ static void scoreDatabaseMulti(int *scores, int type,
             contextsGpu[k].card = cards[i][j];
             contextsGpu[k].gpuSync = &(gpuSyncs[i]);
             contextsGpu[k].cpuGpuSync = &(cpuGpuSyncs[i]);
-
             threadCreate(&(tasksGpu[k]), kernelThreadShort, &(contextsGpu[k]));
         }
     }

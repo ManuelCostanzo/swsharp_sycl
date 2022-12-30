@@ -24,8 +24,6 @@ Contact SW# author by mkorpar@gmail.com.
 Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.unlp.edu.ar
 */
 
-#ifdef SYCL_LANGUAGE_VERSION
-
 #include <CL/sycl.hpp>
 #ifdef HIP
 namespace sycl = cl::sycl;
@@ -409,10 +407,13 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
 
     int useGpu = indexes == NULL || indexesLen > 100;
 
+    int withThread = !useGpu || withThreads();
+
     //**************************************************************************
     // FILTER LONG INDEXES
 
-    int *longIndexesNew;
+    int *
+        longIndexesNew;
     int longIndexesNewLen;
 
     filterLongIndexesArray(&longIndexesNew, &longIndexesNewLen, longIndexes,
@@ -450,7 +451,7 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
 
     Thread thread;
 
-    if (withThreads())
+    if (withThread)
     {
         threadCreate(&thread, scoreCpu, (void *)&contextCpu);
     }
@@ -473,8 +474,8 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
 
         TIMER_STOP;
 
-        int longInexesSolved;
-        if (withThreads())
+        int longInexesSolved = 0;
+        if (withThread)
         {
             mutexLock(contextCpu.mutex);
 
@@ -488,7 +489,8 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
 
         TIMER_START("Long solve");
 
-        if ((!withThreads() && longIndexesLen < longIndexesNewLen) || (withThreads() longInexesSolved < longIndexesNewLen))
+        printf("%d %d\n", longIndexesLen, longIndexesNewLen);
+        if (!withThread || (withThread && longInexesSolved < longIndexesNewLen))
         {
             scoreLongDatabasesGpu(scores, type, queries, queriesLen,
                                   longDatabase, scorer, longIndexesNew + longInexesSolved,
@@ -498,7 +500,7 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
         TIMER_STOP;
     }
 
-    if (withThreads())
+    if (withThread)
     {
         threadJoin(thread);
     }
@@ -834,5 +836,3 @@ static int int2CmpY(const void *a_, const void *b_)
 
 //------------------------------------------------------------------------------
 //******************************************************************************
-
-#endif // __CUDACC__
