@@ -190,16 +190,16 @@ static void *kernelThread(void *param);
 static void *kernelsThread(void *param);
 
 // gpu kernels
-__global__ void hwSolve(char *codes, int *starts, int *lengths, int *indexes,
+__global__ __launch_bounds__(MAX_THREADS) void hwSolve(char *codes, int *starts, int *lengths, int *indexes,
                         int *scores, int2 *hBus);
 
-__global__ void nwSolve(char *codes, int *starts, int *lengths, int *indexes,
+__global__ __launch_bounds__(MAX_THREADS) void nwSolve(char *codes, int *starts, int *lengths, int *indexes,
                         int *scores, int2 *hBus);
 
-__global__ void ovSolve(char *codes, int *starts, int *lengths, int *indexes,
+__global__ __launch_bounds__(MAX_THREADS) void ovSolve(char *codes, int *starts, int *lengths, int *indexes,
                         int *scores, int2 *hBus);
 
-__global__ void swSolve(char *codes, int *starts, int *lengths, int *indexes,
+__global__ __launch_bounds__(MAX_THREADS) void swSolve(char *codes, int *starts, int *lengths, int *indexes,
                         int *scores, int2 *hBus);
 
 __device__ static int gap(int index);
@@ -1078,7 +1078,7 @@ static void *kernelThread(void *param)
 //------------------------------------------------------------------------------
 // GPU KERNELS
 
-__global__ void hwSolve(char *codes, int *starts, int *lengths, int *indexes,
+__global__ __launch_bounds__(MAX_THREADS) void hwSolve(char *codes, int *starts, int *lengths, int *indexes,
                         int *scores, int2 *hBus)
 {
 
@@ -1088,7 +1088,7 @@ __global__ void hwSolve(char *codes, int *starts, int *lengths, int *indexes,
     }
 }
 
-__global__ void nwSolve(char *codes, int *starts, int *lengths, int *indexes,
+__global__ __launch_bounds__(MAX_THREADS) void nwSolve(char *codes, int *starts, int *lengths, int *indexes,
                         int *scores, int2 *hBus)
 {
 
@@ -1098,7 +1098,7 @@ __global__ void nwSolve(char *codes, int *starts, int *lengths, int *indexes,
     }
 }
 
-__global__ void ovSolve(char *codes, int *starts, int *lengths, int *indexes,
+__global__ __launch_bounds__(MAX_THREADS) void ovSolve(char *codes, int *starts, int *lengths, int *indexes,
                         int *scores, int2 *hBus)
 {
 
@@ -1108,7 +1108,7 @@ __global__ void ovSolve(char *codes, int *starts, int *lengths, int *indexes,
     }
 }
 
-__global__ void swSolve(char *codes, int *starts, int *lengths, int *indexes,
+__global__ __launch_bounds__(MAX_THREADS) void swSolve(char *codes, int *starts, int *lengths, int *indexes,
                         int *scores, int2 *hBus)
 {
 

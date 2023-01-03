@@ -146,6 +146,6 @@ extern void maxWorkGroups(int card, int defaultBlocks, int defaultThreads, int c
         }
     }
 
-    // printf("%s\n", cdp.name());
+    // printf("%s\n", cdp.namE);
     // printf("%d %d\n", *threads, *blocks);
 }

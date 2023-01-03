@@ -45,6 +45,8 @@ Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.un
 #define CPU_WORKER_STEP 64
 #define CPU_THREADPOOL_STEP 100
 
+#define MAX_THREADS 1024
+
 #define THREADS 64
 #define BLOCKS 120
 
@@ -284,21 +286,21 @@ static void *kernelThreadCpu(void *param);
 static void *cpuWorker(void *param);
 
 // gpu kernels
-__global__ static void hwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
-                                       int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block);
+__global__ __launch_bounds__(MAX_THREADS) static void hwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
+                                                                      int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block);
 
-__global__ static void nwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
-                                       int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block);
+__global__ __launch_bounds__(MAX_THREADS) static void nwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
+                                                                      int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block);
 
-__global__ static void ovSolveShortGpu(int *scores, int2 *hBus, int *lengths,
-                                       int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block);
+__global__ __launch_bounds__(MAX_THREADS) static void ovSolveShortGpu(int *scores, int2 *hBus, int *lengths,
+                                                                      int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block);
 
-__global__ static void swSolveShortGpu(int *scores, int2 *hBus, int *lengths,
-                                       int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block);
+__global__ __launch_bounds__(MAX_THREADS) static void swSolveShortGpu(int *scores, int2 *hBus, int *lengths,
+                                                                      int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block);
 
-__global__ static void swSolveShortGpuSimd(int *scores, int2 *hBus,
-                                           int *lengths, int *lengthsPadded, int *offsets, int *indexes,
-                                           int indexesLen, int block);
+__global__ __launch_bounds__(MAX_THREADS) static void swSolveShortGpuSimd(int *scores, int2 *hBus,
+                                                                          int *lengths, int *lengthsPadded, int *offsets, int *indexes,
+                                                                          int indexesLen, int block);
 
 // query profile
 static QueryProfile *createQueryProfile(Chain *query, Scorer *scorer);
@@ -1553,7 +1555,7 @@ static void *kernelThread(void *param)
         mutexLock(&(cpuGpuSync->mutex));
 
         // indexes already solved
-        if (firstIdx >= cpuGpuSync->firstCpu)
+        if ((withThreads() && firstIdx >= cpuGpuSync->firstCpu) || (!withThreads() && firstIdx <= lastIdx))
         {
             mutexUnlock(&(cpuGpuSync->mutex));
             break;
@@ -1798,8 +1800,8 @@ __device__ static int gap(int index)
     return (-gapOpen_ - index * gapExtend_) * (index >= 0);
 }
 
-__global__ static void hwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
-                                       int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block)
+__global__ __launch_bounds__(MAX_THREADS) static void hwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
+                                                                      int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block)
 {
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -1948,8 +1950,8 @@ __global__ static void hwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
     scores[id] = score;
 }
 
-__global__ static void nwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
-                                       int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block)
+__global__ __launch_bounds__(MAX_THREADS) static void nwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
+                                                                      int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block)
 {
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -2098,8 +2100,8 @@ __global__ static void nwSolveShortGpu(int *scores, int2 *hBus, int *lengths,
     scores[id] = score;
 }
 
-__global__ static void ovSolveShortGpu(int *scores, int2 *hBus, int *lengths,
-                                       int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block)
+__global__ __launch_bounds__(MAX_THREADS) static void ovSolveShortGpu(int *scores, int2 *hBus, int *lengths,
+                                                                      int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block)
 {
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -2248,8 +2250,8 @@ __global__ static void ovSolveShortGpu(int *scores, int2 *hBus, int *lengths,
     scores[id] = score;
 }
 
-__global__ static void swSolveShortGpu(int *scores, int2 *hBus, int *lengths,
-                                       int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block)
+__global__ __launch_bounds__(MAX_THREADS) static void swSolveShortGpu(int *scores, int2 *hBus, int *lengths,
+                                                                      int *lengthsPadded, int *offsets, int *indexes, int indexesLen, int block)
 {
 
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -2435,9 +2437,9 @@ __global__ static void swSolveShortGpu(int *scores, int2 *hBus, int *lengths,
         : "=r"(score)                                                                        \
         : "r"(score), "r"(insScr), "r"(0))
 
-__global__ static void swSolveShortGpuSimd(int *scores, int2 *hBusGlobal,
-                                           int *lengths, int *lengthsPadded, int *offsets, int *indexes,
-                                           int indexesLen, int block)
+__global__ __launch_bounds__(MAX_THREADS) static void swSolveShortGpuSimd(int *scores, int2 *hBusGlobal,
+                                                                          int *lengths, int *lengthsPadded, int *offsets, int *indexes,
+                                                                          int indexesLen, int block)
 {
 
 #if __CUDA_ARCH__ >= 300

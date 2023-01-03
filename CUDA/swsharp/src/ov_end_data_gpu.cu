@@ -123,11 +123,11 @@ __device__ static void solveShortNormal(int d, VBus vBus, int2 *hBus,
                                         int3 *results, Sub sub);
 
 template <class Sub>
-__global__ static void solveShort(int d, VBus vBus, int2 *hBus, int3 *results,
+__global__ __launch_bounds__(MAX_THREADS) static void solveShort(int d, VBus vBus, int2 *hBus, int3 *results,
                                   Sub sub);
 
 template <class Sub>
-__global__ static void solveLong(int d, VBus vBus, int2 *hBus, int3 *results,
+__global__ __launch_bounds__(MAX_THREADS) static void solveLong(int d, VBus vBus, int2 *hBus, int3 *results,
                                  Sub sub);
 
 #endif
@@ -493,7 +493,7 @@ __device__ static void solveShortNormal(int d, VBus vBus, int2 *hBus,
 }
 
 template <class Sub>
-__global__ static void solveShort(int d, VBus vBus, int2 *hBus, int3 *results, Sub sub)
+__global__ __launch_bounds__(MAX_THREADS) static void solveShort(int d, VBus vBus, int2 *hBus, int3 *results, Sub sub)
 {
 
     if (blockIdx.x == (gridDim.x - 1))
@@ -507,7 +507,7 @@ __global__ static void solveShort(int d, VBus vBus, int2 *hBus, int3 *results, S
 }
 
 template <class Sub>
-__global__ static void solveLong(int d, VBus vBus, int2 *hBus, int3 *results, Sub sub)
+__global__ __launch_bounds__(MAX_THREADS) static void solveLong(int d, VBus vBus, int2 *hBus, int3 *results, Sub sub)
 {
 
     __shared__ int hBusScrShr[MAX_THREADS];
