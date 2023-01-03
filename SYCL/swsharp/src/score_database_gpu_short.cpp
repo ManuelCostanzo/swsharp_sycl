@@ -1522,7 +1522,7 @@ try
         mutexLock(&(cpuGpuSync->mutex));
 
         // indexes already solved
-        if ((withThreads() && firstIdx >= cpuGpuSync->firstCpu) || (!withThreads() && firstIdx <= lastIdx))
+        if ((withThreads() && firstIdx >= cpuGpuSync->firstCpu) || (!withThreads() && firstIdx >= lastIdx))
         {
             mutexUnlock(&(cpuGpuSync->mutex));
             break;
