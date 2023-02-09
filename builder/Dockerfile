@@ -57,9 +57,9 @@ RUN printf "export DPCPP_HOME=/opt/build/intel\nexport PATH=\$DPCPP_HOME/llvm/bu
 #### END - Install INTEL-LLVM
 
 #### BEGIN Install HIPSYCL & LLVM
- RUN sh /scripts/install-hipsycl-llvm.sh
- RUN sh /scripts/install-hipsycl.sh
-RUN printf "export DPCPP_HOME=/opt/hipSYCL\nexport PATH=\$DPCPP_HOME/llvm/bin:\$PATH\nexport LD_LIBRARY_PATH=\$DPCPP_HOME/llvm/lib:\$LD_LIBRARY_PATH\n" >> ~/.bashrc
+# RUN sh /scripts/install-hipsycl-llvm.sh
+# RUN sh /scripts/install-hipsycl.sh
+# RUN printf "export DPCPP_HOME=/opt/hipSYCL\nexport PATH=\$DPCPP_HOME/llvm/bin:\$PATH\nexport LD_LIBRARY_PATH=\$DPCPP_HOME/llvm/lib:\$LD_LIBRARY_PATH\n" >> ~/.bashrc
 #### END Install HIPSYCL & LLVM
 
 WORKDIR /app

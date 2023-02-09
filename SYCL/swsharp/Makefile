@@ -1,9 +1,9 @@
 CC = g++ -march=native -O3
 
-ifeq ($(BACK), dpcpp)
-	CP = dpcpp -fsycl -fsycl-unnamed-lambda -O3
-	CU = dpcpp -fsycl -fsycl-unnamed-lambda -O3
-	LD = dpcpp -fsycl -fsycl-unnamed-lambda -O3
+ifeq ($(BACK), icpx)
+	CP = icpx -fsycl -fsycl-unnamed-lambda -O3
+	CU = icpx -fsycl -fsycl-unnamed-lambda -O3
+	LD = icpx -fsycl -fsycl-unnamed-lambda -O3
 endif
 
 
@@ -11,6 +11,12 @@ ifeq ($(BACK), intel)
 	 CP = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
 	 CU = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
 	 LD = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
+endif
+
+ifeq ($(BACK), fpga)
+	CP = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v 
+	CU = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v 
+	LD = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v
 endif
 
 

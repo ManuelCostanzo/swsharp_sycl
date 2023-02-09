@@ -1,9 +1,9 @@
 CC = g++ -O3 -march=native
 
-ifeq ($(BACK), dpcpp)
-	CP = dpcpp -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
-	CU = dpcpp -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
-	LD = dpcpp -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
+ifeq ($(BACK), icpx)
+	CP = icpx -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
+	CU = icpx -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
+	LD = icpx -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
 endif
 
 
@@ -15,9 +15,9 @@ endif
 
 
 ifeq ($(BACK), hip)
-	CP = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3  -DHIP
-	CU = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3  -DHIP
-	LD = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3  -DHIP
+	CP = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
+	CU = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
+	LD = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
 endif
 
 DX = doxygen
