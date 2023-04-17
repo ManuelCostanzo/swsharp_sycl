@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DATABASE_FOLDER=/app/swsharp_oneapi/databases/
+DATABASE_FOLDER=../..//databases/
 SWSYCL_FOLDER=../../
 
 default_values() {
