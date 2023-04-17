@@ -19,12 +19,20 @@ ifeq ($(BACK), fpga)
 	LD = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v
 endif
 
+ifeq ($(BACK), amd)
+         CP = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
+         CU = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
+         LD = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
+endif
+
+
 
 ifeq ($(BACK), hip)
 	CP = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
 	CU = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
 	LD = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
 endif
+
 
 
 NAME = swsharp

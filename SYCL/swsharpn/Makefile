@@ -13,6 +13,13 @@ ifeq ($(BACK), intel)
 	 LD = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
 endif
 
+ifeq ($(BACK), amd)
+         CP = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+         CU = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+         LD = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+endif
+
+
 
 ifeq ($(BACK), hip)
 	CP = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP

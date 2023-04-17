@@ -15,9 +15,15 @@ endif
 
 
 ifeq ($(BACK), fpga)
-	CP = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v ../lib/libswsharp.a
-	CU = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v ../lib/libswsharp.a
-	LD = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v ../lib/libswsharp.a
+	CP = icpx -fsycl -fintelfpga -v ../lib/libswsharp.a
+	CU = icpx -fsycl -fintelfpga -v ../lib/libswsharp.a
+	LD = icpx -fsycl -fintelfpga -v ../lib/libswsharp.a
+endif
+
+ifeq ($(BACK), amd)
+         CP = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+         CU = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+         LD = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
 endif
 
 
