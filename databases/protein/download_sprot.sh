@@ -1,11 +1,11 @@
 #wget "https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz" -O uniprot_sprot.fasta.gz
 #gunzip -k uniprot_sprot.fasta.gz
 
-wget 'https://doc-04-9k-docs.googleusercontent.com/docs/securesc/h4tpl49irjrpbcmqk7o9l8d6roa10tlh/8oo1905ifumgbumep3aj83tgdavaqeq0/1681752600000/03513909492646616532/03513909492646616532/1JorMVhY_jHZmok3Gktjkg9y5CYT7jemQ?e=download&ax=ALy03A4FwALQZQVDowb0wUg-qiq82YX90FaoiSLGgSNo8oV8yAdh-Loh2Sj39tjwRZkOrd-UiyrAnt1UJ_EM2li39YAivNQO6DH4DyUYqNfodrF-IVVRlhd6F65urgDfZAhvgxD-LR8EjH48sbDhU5xSVpws75oBMeNVksAz4UjZOt1lfv0YH6Q9kwcx79xPH5W_dUSR40oPmVkGR5ZI24uwvQvnLdBzqdDQ01b4A8rT8NVcslcz7GXawvTPJpax1CEDF2w6bigv5tJV0_k2U2gc0MGvWGLS93X8x5MWaa40bmDr2XmPcKQVlj7YGkNAfBgJZNqgVsjCK58F5FRnMKKjDDqTPVG6rMzfQGF3qcbMe1gbmL_poOJpby3hDPqAv_Y8Mxp53HmCu87TkU5ESmdImQAZ5sigfGGW3LoJryvSZv6q8LJEA37R2mezegpgt8rEj69Gux31dSvFc8eWHQIG4Et7zxZf70KVQcQ7DiJmMNrkZMCzITerSx4XQcP7wqIwA9761-ZtJQA4-v0gPLr96_c2wH6l3tn066LSqshdYxGqBApfmQMKhKqdQs_O1MzyV2D4AdfTGGm26xONYqvhQzuOCH42isWHBXPgpHPzuv6vmzsEIXHhLpW1-8GHmQEi-hptCDVRRRa0jNA7tQR4pLER35gD1u2sK3RrcJwhdwkN_8rangugKd5APZeG4i1uilbVs6pF3K_V1Gc4aW66rpxwp4BQ9qGC4Ld1xq5l1I_SZby3HnIKcDZVB7YMaJA56L5JO9ApCWn30O9V6hQFJozYQyh84HXEt-CS-gR_gDtEjY3_lGw7MH1Bzm0zBkY7L07msaH8I0xhCkKp4R29veU1xfi7Lr8b8dsq39YO6Bn62qlW1aMrDgQj-DvFbBY&uuid=f13445be-f765-4db9-8905-a2c1c3259431&authuser=0&nonce=levklhvi6j4do&user=03513909492646616532&hash=6s30gd2gumu5gktnlvm9a38eusnqvrel' \
+wget 'https://doc-04-9k-docs.googleusercontent.com/docs/securesc/h4tpl49irjrpbcmqk7o9l8d6roa10tlh/a74vsfupjqiig5m0qqfiag9t1j27650i/1681757550000/03513909492646616532/03513909492646616532/1JorMVhY_jHZmok3Gktjkg9y5CYT7jemQ?e=download&ax=ALy03A6s7whNXi4D5bxTQE7LTLhXckWeJq9zzYR7haA5-Vvtctjq0bD6D-_KNjTM9XX_DfukbD99sX-JzAtsR2k9ptP0YaSKhOzt1-oaMAL6IvJFEzwlGXT5HX3la-Ic5fjm7EZmcl6715gUVSVCPBfDOmPn3BVvhTaJ4dacwQBYA7gsdjHeH2lRLHLdMbVDoiB45tJHJBSZZsNgOhdWRYtEXlTRo-trFr9yCKohP0IXz6mYNXnXJZB0SleqdHu_BAPi3RFyv8opxsXq446u8BdRaX6dzYROay6gthrJ9tpDFaWjIRQYCuU-JIPpb2eNOETYWnBrRur3dJdP5BxmxInz5SmFzE0RUBCZj2XjT-woWjnq-6b1R_U5r5j0r8fOvrTj3spdUZa5alZ5rFRcOD8RhdR7upTbtOhosB_iq_j18jzYYA4O_rxYRKxHOkG2S6rY30vdtN23a6YqXEbiFxLQWjOnG-Vwro_QovfEhPRuErlgm2bbc85ZJIdKfvtCdwG9_jpnyWb9YhS-nqhEkOKWK7SgTBzMNV_YXF7mEuDyNCsBKBX9t5Rg54KMnCrsXDpcs56teHaQjWKZrEPxkvlvAju8JcTeMnV5sWSEcSlvNAH0OL3TcYFfajNmIwFPJ1CcPkA_WEoVSXffSkiLhDQK98jooJK5CQLVDUMqPK453awhjAB180yYmRZbKgZ5Zi3hGUv2M766ijhuG9t-4S1sg2dIGd_QnhpISIQ_OmBLMdSPAMcuI6hPEqcv5Dh3m_Vjc4XdVFg5nF3Bq8kG9aW34XkU_MDJUGO4Lt5BQtfwkXgV_H6wdzMOID7h4NnvozdYxnXWQjKAyzst-aMgKJKCAjmtsq9_JulTOPbfzfE3Pr9W6oSI_Ms3yuX_0E7Mvhs&uuid=ab25e724-ade8-4524-9319-49d392bb6fec&authuser=0' \
 --header 'authority: doc-04-9k-docs.googleusercontent.com' \
 --header 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7' \
 --header 'accept-language: en-US,en;q=0.9,es-US;q=0.8,es;q=0.7' \
---header 'cookie: AUTH_83n3loam9t952vpaqik1o7d1t6uerd2b_nonce=levklhvi6j4do' \
+--header 'cookie: AUTH_83n3loam9t952vpaqik1o7d1t6uerd2b=03513909492646616532|1681757475000|9pscr43gp8u54qrlk3oukihcvlrig3f6' \
 --header 'sec-ch-ua: "Chromium";v="112", "Google Chrome";v="112", "Not:A-Brand";v="99"' \
 --header 'sec-ch-ua-mobile: ?0' \
 --header 'sec-ch-ua-platform: "Linux"' \
@@ -17,6 +17,5 @@ wget 'https://doc-04-9k-docs.googleusercontent.com/docs/securesc/h4tpl49irjrpbcm
 --header 'x-client-data: CIa2yQEIo7bJAQipncoBCOjpygEIkqHLAQjhl80BCOSXzQEI7Z7NAQiHoM0BCImhzQEIvqLNAQifpM0BCJSlzQEIrIStAg==' \
 --compression=auto \
 --output-document=uniprot_sprot.fasta.tar.gz
-
 
 tar -xzvf uniprot_sprot.fasta.tar.gz
