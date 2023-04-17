@@ -20,12 +20,10 @@ ifeq ($(BACK), fpga)
 endif
 
 ifeq ($(BACK), amd)
-         CP = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
-         CU = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
-         LD = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
+	CP = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
+	CU = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
+	LD = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa  -Xsycl-target-backend --offload-arch=gfx1031 -O3
 endif
-
-
 
 ifeq ($(BACK), hip)
 	CP = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
