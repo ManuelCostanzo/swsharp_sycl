@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Contact SW# author by mkorpar@gmail.com.
 
-Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.unlp.edu.ar
+Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar,
+erucci@lidi.info.unlp.edu.ar
 */
 
 #include <CL/sycl.hpp>
@@ -38,9 +39,9 @@ namespace sycl = cl::sycl;
 #include "cpu_module.h"
 #include "cuda_utils.h"
 #include "error.h"
-#include "scorer.h"
 #include "score_database_gpu_long.h"
 #include "score_database_gpu_short.h"
+#include "scorer.h"
 #include "thread.h"
 #include "threadpool.h"
 #include "utils.h"
@@ -55,78 +56,78 @@ namespace sycl = cl::sycl;
 #define CPU_WORKER_STEP 100
 #define CPU_THREADPOOL_STEP 100
 
-typedef struct Context
-{
-    int **scores;
-    int type;
-    Chain **queries;
-    int queriesLen;
-    ChainDatabaseGpu *chainDatabaseGpu;
-    Scorer *scorer;
-    int *indexes;
-    int indexesLen;
-    int *cards;
-    int cardsLen;
+typedef struct Context {
+  int **scores;
+  int type;
+  Chain **queries;
+  int queriesLen;
+  ChainDatabaseGpu *chainDatabaseGpu;
+  Scorer *scorer;
+  int *indexes;
+  int indexesLen;
+  int *cards;
+  int cardsLen;
 } Context;
 
-typedef struct ContextCpu
-{
-    int *scores;
-    int type;
-    Chain **queries;
-    int queriesLen;
-    Chain **database;
-    int databaseLen;
-    Scorer *scorer;
-    int *indexes;
-    int indexesLen;
-    int useSimd;
-    Mutex *mutex;
-    int lastIndexSolved;
-    int cancelled;
+typedef struct ContextCpu {
+  int *scores;
+  int type;
+  Chain **queries;
+  int queriesLen;
+  Chain **database;
+  int databaseLen;
+  Scorer *scorer;
+  int *indexes;
+  int indexesLen;
+  int useSimd;
+  Mutex *mutex;
+  int lastIndexSolved;
+  int cancelled;
 } ContextCpu;
 
-typedef struct ContextWorkerCpu
-{
-    int *scores;
-    int type;
-    Chain **queries;
-    int queriesLen;
-    Chain **database;
-    int databaseLen;
-    Scorer *scorer;
-    int useSimd;
-    Mutex *mutex;
-    int *lastQuery;
-    int *lastTarget;
-    int *cancelled;
+typedef struct ContextWorkerCpu {
+  int *scores;
+  int type;
+  Chain **queries;
+  int queriesLen;
+  Chain **database;
+  int databaseLen;
+  Scorer *scorer;
+  int useSimd;
+  Mutex *mutex;
+  int *lastQuery;
+  int *lastTarget;
+  int *cancelled;
 } ContextWorkerCpu;
 
-struct ChainDatabaseGpu
-{
-    Chain **database;
-    int databaseLen;
-    ShortDatabase *shortDatabase;
-    LongDatabase *longDatabase;
-    int *longIndexes;
-    int longIndexesLen;
+struct ChainDatabaseGpu {
+  Chain **database;
+  int databaseLen;
+  ShortDatabase *shortDatabase;
+  LongDatabase *longDatabase;
+  int *longIndexes;
+  int longIndexesLen;
 };
 
 //******************************************************************************
 // PUBLIC
 
-extern ChainDatabaseGpu *chainDatabaseGpuCreate(Chain **database, int databaseLen,
-                                                int *cards, int cardsLen);
+extern ChainDatabaseGpu *chainDatabaseGpuCreate(Chain **database,
+                                                int databaseLen, int *cards,
+                                                int cardsLen);
 
 extern void chainDatabaseGpuDelete(ChainDatabaseGpu *chainDatabaseGpu);
 
 extern void scoreDatabaseGpu(int **scores, int type, Chain *query,
-                             ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer, int *indexes,
-                             int indexesLen, int *cards, int cardsLen, Thread *thread);
+                             ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
+                             int *indexes, int indexesLen, int *cards,
+                             int cardsLen, Thread *thread);
 
 extern void scoreDatabasesGpu(int **scores, int type, Chain **queries,
-                              int queriesLen, ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
-                              int *indexes, int indexesLen, int *cards, int cardsLen, Thread *thread);
+                              int queriesLen,
+                              ChainDatabaseGpu *chainDatabaseGpu,
+                              Scorer *scorer, int *indexes, int indexesLen,
+                              int *cards, int cardsLen, Thread *thread);
 
 //******************************************************************************
 
@@ -134,14 +135,17 @@ extern void scoreDatabasesGpu(int **scores, int type, Chain **queries,
 // PRIVATE
 
 static void scoreDatabase(int **scores, int type, Chain **queries,
-                          int queriesLen, ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
-                          int *indexes, int indexesLen, int *cards, int cardsLen, Thread *thread);
+                          int queriesLen, ChainDatabaseGpu *chainDatabaseGpu,
+                          Scorer *scorer, int *indexes, int indexesLen,
+                          int *cards, int cardsLen, Thread *thread);
 
 static void *scoreDatabaseThreadWrapper(void *param);
 
 static void scoreDatabaseThread(int *scores, int type, Chain **queries,
-                                int queriesLen, ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
-                                int *indexes, int indexesLen, int *cards, int cardsLen, int useSimd);
+                                int queriesLen,
+                                ChainDatabaseGpu *chainDatabaseGpu,
+                                Scorer *scorer, int *indexes, int indexesLen,
+                                int *cards, int cardsLen, int useSimd);
 
 // cpu workers
 static void *scoreCpu(void *param);
@@ -150,11 +154,12 @@ static void *scoreCpuWorker(void *param);
 
 // utils
 static void filterIndexesArray(int **indexesNew, int *indexesNewLen,
-                               int *indexes, int indexesLen, int minIndex, int maxIndex);
+                               int *indexes, int indexesLen, int minIndex,
+                               int maxIndex);
 
 static void filterLongIndexesArray(int **longIndexesNew, int *longIndexesNewLen,
-                                   int *longIndexes, int longIndexesLen, int *indexes, int indexesLen,
-                                   int maxIndex);
+                                   int *longIndexes, int longIndexesLen,
+                                   int *indexes, int indexesLen, int maxIndex);
 
 static int int2CmpY(const void *a_, const void *b_);
 
@@ -163,116 +168,111 @@ static int int2CmpY(const void *a_, const void *b_);
 //******************************************************************************
 // PUBLIC
 
-extern ChainDatabaseGpu *chainDatabaseGpuCreate(Chain **database, int databaseLen,
-                                                int *cards, int cardsLen)
-{
+extern ChainDatabaseGpu *chainDatabaseGpuCreate(Chain **database,
+                                                int databaseLen, int *cards,
+                                                int cardsLen) {
 
-    if (cardsLen == 0 || databaseLen == 0)
-    {
-        return NULL;
+  if (cardsLen == 0 || databaseLen == 0) {
+    return NULL;
+  }
+
+  //**************************************************************************
+  // CREATE LONG INDEXES
+
+  sycl::int2 *packed = (sycl::int2 *)malloc(databaseLen * sizeof(sycl::int2));
+  int packedLen = 0;
+
+  for (int i = 0; i < databaseLen; ++i) {
+
+    const int n = chainGetLength(database[i]);
+
+    if (n >= MAX_SHORT_LEN) {
+      packed[packedLen].x() = i;
+      packed[packedLen].y() = n;
+      packedLen++;
     }
+  }
 
-    //**************************************************************************
-    // CREATE LONG INDEXES
+  qsort(packed, packedLen, sizeof(sycl::int2), int2CmpY);
 
-    sycl::int2 *packed = (sycl::int2 *)malloc(databaseLen * sizeof(sycl::int2));
-    int packedLen = 0;
+  int longIndexesLen = packedLen;
+  int *longIndexes = (int *)malloc(longIndexesLen * sizeof(int));
 
-    for (int i = 0; i < databaseLen; ++i)
-    {
+  for (int i = 0; i < longIndexesLen; ++i) {
+    longIndexes[i] = packed[i].x();
+  }
 
-        const int n = chainGetLength(database[i]);
+  free(packed);
 
-        if (n >= MAX_SHORT_LEN)
-        {
-            packed[packedLen].x() = i;
-            packed[packedLen].y() = n;
-            packedLen++;
-        }
-    }
+  //**************************************************************************
 
-    qsort(packed, packedLen, sizeof(sycl::int2), int2CmpY);
+  //**************************************************************************
+  // CREATE GPU DATABASES
 
-    int longIndexesLen = packedLen;
-    int *longIndexes = (int *)malloc(longIndexesLen * sizeof(int));
+  ShortDatabase *shortDatabase = shortDatabaseCreate(
+      database, databaseLen, 0, MAX_SHORT_LEN, cards, cardsLen);
 
-    for (int i = 0; i < longIndexesLen; ++i)
-    {
-        longIndexes[i] = packed[i].x();
-    }
+  LongDatabase *longDatabase = longDatabaseCreate(
+      database, databaseLen, MAX_SHORT_LEN, INT_MAX, cards, cardsLen);
 
-    free(packed);
+  //**************************************************************************
 
-    //**************************************************************************
+  //**************************************************************************
+  // SAVE DATA
 
-    //**************************************************************************
-    // CREATE GPU DATABASES
+  ChainDatabaseGpu *chainDatabaseGpu =
+      (ChainDatabaseGpu *)malloc(sizeof(struct ChainDatabaseGpu));
 
-    ShortDatabase *shortDatabase = shortDatabaseCreate(database, databaseLen,
-                                                       0, MAX_SHORT_LEN, cards, cardsLen);
+  chainDatabaseGpu->database = database;
+  chainDatabaseGpu->databaseLen = databaseLen;
+  chainDatabaseGpu->shortDatabase = shortDatabase;
+  chainDatabaseGpu->longDatabase = longDatabase;
+  chainDatabaseGpu->longIndexes = longIndexes;
+  chainDatabaseGpu->longIndexesLen = longIndexesLen;
 
-    LongDatabase *longDatabase = longDatabaseCreate(database, databaseLen,
-                                                    MAX_SHORT_LEN, INT_MAX, cards, cardsLen);
+  //**************************************************************************
 
-    //**************************************************************************
-
-    //**************************************************************************
-    // SAVE DATA
-
-    ChainDatabaseGpu *chainDatabaseGpu =
-        (ChainDatabaseGpu *)malloc(sizeof(struct ChainDatabaseGpu));
-
-    chainDatabaseGpu->database = database;
-    chainDatabaseGpu->databaseLen = databaseLen;
-    chainDatabaseGpu->shortDatabase = shortDatabase;
-    chainDatabaseGpu->longDatabase = longDatabase;
-    chainDatabaseGpu->longIndexes = longIndexes;
-    chainDatabaseGpu->longIndexesLen = longIndexesLen;
-
-    //**************************************************************************
-
-    return chainDatabaseGpu;
+  return chainDatabaseGpu;
 }
 
-extern void chainDatabaseGpuDelete(ChainDatabaseGpu *chainDatabaseGpu)
-{
+extern void chainDatabaseGpuDelete(ChainDatabaseGpu *chainDatabaseGpu) {
 
-    if (chainDatabaseGpu != NULL)
-    {
+  if (chainDatabaseGpu != NULL) {
 
-        shortDatabaseDelete(chainDatabaseGpu->shortDatabase);
-        longDatabaseDelete(chainDatabaseGpu->longDatabase);
-        free(chainDatabaseGpu->longIndexes);
+    shortDatabaseDelete(chainDatabaseGpu->shortDatabase);
+    longDatabaseDelete(chainDatabaseGpu->longDatabase);
+    free(chainDatabaseGpu->longIndexes);
 
-        free(chainDatabaseGpu);
-    }
+    free(chainDatabaseGpu);
+  }
 }
 
-extern size_t chainDatabaseGpuMemoryConsumption(Chain **database, int databaseLen)
-{
+extern size_t chainDatabaseGpuMemoryConsumption(Chain **database,
+                                                int databaseLen) {
 
-    size_t mem1 = shortDatabaseGpuMemoryConsumption(database, databaseLen,
-                                                    0, MAX_SHORT_LEN);
-    size_t mem2 = longDatabaseGpuMemoryConsumption(database, databaseLen,
-                                                   MAX_SHORT_LEN, INT_MAX);
+  size_t mem1 = shortDatabaseGpuMemoryConsumption(database, databaseLen, 0,
+                                                  MAX_SHORT_LEN);
+  size_t mem2 = longDatabaseGpuMemoryConsumption(database, databaseLen,
+                                                 MAX_SHORT_LEN, INT_MAX);
 
-    return mem1 + mem2;
+  return mem1 + mem2;
 }
 
 extern void scoreDatabaseGpu(int **scores, int type, Chain *query,
-                             ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer, int *indexes,
-                             int indexesLen, int *cards, int cardsLen, Thread *thread)
-{
-    scoreDatabase(scores, type, &query, 1, chainDatabaseGpu, scorer, indexes,
-                  indexesLen, cards, cardsLen, thread);
+                             ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
+                             int *indexes, int indexesLen, int *cards,
+                             int cardsLen, Thread *thread) {
+  scoreDatabase(scores, type, &query, 1, chainDatabaseGpu, scorer, indexes,
+                indexesLen, cards, cardsLen, thread);
 }
 
 extern void scoreDatabasesGpu(int **scores, int type, Chain **queries,
-                              int queriesLen, ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
-                              int *indexes, int indexesLen, int *cards, int cardsLen, Thread *thread)
-{
-    scoreDatabase(scores, type, queries, queriesLen, chainDatabaseGpu, scorer,
-                  indexes, indexesLen, cards, cardsLen, thread);
+                              int queriesLen,
+                              ChainDatabaseGpu *chainDatabaseGpu,
+                              Scorer *scorer, int *indexes, int indexesLen,
+                              int *cards, int cardsLen, Thread *thread) {
+  scoreDatabase(scores, type, queries, queriesLen, chainDatabaseGpu, scorer,
+                indexes, indexesLen, cards, cardsLen, thread);
 }
 
 //******************************************************************************
@@ -282,299 +282,278 @@ extern void scoreDatabasesGpu(int **scores, int type, Chain **queries,
 // ENTRY
 
 static void scoreDatabase(int **scores, int type, Chain **queries,
-                          int queriesLen, ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
-                          int *indexes, int indexesLen, int *cards, int cardsLen, Thread *thread)
-{
+                          int queriesLen, ChainDatabaseGpu *chainDatabaseGpu,
+                          Scorer *scorer, int *indexes, int indexesLen,
+                          int *cards, int cardsLen, Thread *thread) {
 
-    ASSERT(cardsLen > 0, "no GPUs available");
+  ASSERT(cardsLen > 0, "no GPUs available");
 
-    Context *param = (Context *)malloc(sizeof(Context));
+  Context *param = (Context *)malloc(sizeof(Context));
 
-    param->scores = scores;
-    param->type = type;
-    param->queries = queries;
-    param->queriesLen = queriesLen;
-    param->chainDatabaseGpu = chainDatabaseGpu;
-    param->scorer = scorer;
-    param->indexes = indexes;
-    param->indexesLen = indexesLen;
-    param->cards = cards;
-    param->cardsLen = cardsLen;
+  param->scores = scores;
+  param->type = type;
+  param->queries = queries;
+  param->queriesLen = queriesLen;
+  param->chainDatabaseGpu = chainDatabaseGpu;
+  param->scorer = scorer;
+  param->indexes = indexes;
+  param->indexesLen = indexesLen;
+  param->cards = cards;
+  param->cardsLen = cardsLen;
 
-    if (thread == NULL)
-    {
-        scoreDatabaseThreadWrapper(param);
-    }
-    else
-    {
-        threadCreate(thread, scoreDatabaseThreadWrapper, (void *)param);
-    }
+  if (thread == NULL) {
+    scoreDatabaseThreadWrapper(param);
+  } else {
+    threadCreate(thread, scoreDatabaseThreadWrapper, (void *)param);
+  }
 }
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 // SOLVE
 
-static void *scoreDatabaseThreadWrapper(void *param)
-{
+static void *scoreDatabaseThreadWrapper(void *param) {
 
-    Context *context = (Context *)param;
+  Context *context = (Context *)param;
 
-    int **scores = context->scores;
-    int type = context->type;
-    Chain **queries = context->queries;
-    int queriesLen = context->queriesLen;
-    ChainDatabaseGpu *chainDatabaseGpu = context->chainDatabaseGpu;
-    Scorer *scorer = context->scorer;
-    int *indexes = context->indexes;
-    int indexesLen = context->indexesLen;
-    int *cards = context->cards;
-    int cardsLen = context->cardsLen;
+  int **scores = context->scores;
+  int type = context->type;
+  Chain **queries = context->queries;
+  int queriesLen = context->queriesLen;
+  ChainDatabaseGpu *chainDatabaseGpu = context->chainDatabaseGpu;
+  Scorer *scorer = context->scorer;
+  int *indexes = context->indexes;
+  int indexesLen = context->indexesLen;
+  int *cards = context->cards;
+  int cardsLen = context->cardsLen;
 
-    int gapOpen = scorerGetGapOpen(scorer);
-    int databaseLen = chainDatabaseGpu->databaseLen;
+  int gapOpen = scorerGetGapOpen(scorer);
+  int databaseLen = chainDatabaseGpu->databaseLen;
 
-    //**************************************************************************
-    // INIT RESULTS
+  //**************************************************************************
+  // INIT RESULTS
 
-    *scores = (int *)malloc(queriesLen * databaseLen * sizeof(int));
+  *scores = (int *)malloc(queriesLen * databaseLen * sizeof(int));
 
-    for (int i = 0; i < queriesLen; ++i)
-    {
-        for (int j = 0; j < databaseLen; ++j)
-        {
-            (*scores)[i * databaseLen + j] = NO_SCORE;
-        }
+  for (int i = 0; i < queriesLen; ++i) {
+    for (int j = 0; j < databaseLen; ++j) {
+      (*scores)[i * databaseLen + j] = NO_SCORE;
     }
+  }
 
-    //**************************************************************************
+  //**************************************************************************
 
-    //**************************************************************************
-    // FILTER INDEXES
+  //**************************************************************************
+  // FILTER INDEXES
 
-    int *indexesNew = NULL;
-    int indexesNewLen;
+  int *indexesNew = NULL;
+  int indexesNewLen;
 
-    filterIndexesArray(&indexesNew, &indexesNewLen, indexes, indexesLen,
-                       0, databaseLen - 1);
+  filterIndexesArray(&indexesNew, &indexesNewLen, indexes, indexesLen, 0,
+                     databaseLen - 1);
 
-    //**************************************************************************
+  //**************************************************************************
 
-    //**************************************************************************
-    // CHECK IF SIMD IS AVAILABLE AND USABLE
+  //**************************************************************************
+  // CHECK IF SIMD IS AVAILABLE AND USABLE
 
-    int useSimd = false;
+  int useSimd = false;
 
-    //**************************************************************************
+  //**************************************************************************
 
-    //**************************************************************************
-    // SOLVE
+  //**************************************************************************
+  // SOLVE
 
-    scoreDatabaseThread(*scores, type, queries, queriesLen, chainDatabaseGpu,
-                        scorer, indexesNew, indexesNewLen, cards, cardsLen, useSimd);
+  scoreDatabaseThread(*scores, type, queries, queriesLen, chainDatabaseGpu,
+                      scorer, indexesNew, indexesNewLen, cards, cardsLen,
+                      useSimd);
 
-    //**************************************************************************
+  //**************************************************************************
 
-    //**************************************************************************
-    // CLEAN MEMORY
+  //**************************************************************************
+  // CLEAN MEMORY
 
-    free(indexesNew);
-    free(param);
+  free(indexesNew);
+  free(param);
 
-    //**************************************************************************
+  //**************************************************************************
 
-    return NULL;
+  return NULL;
 }
 
 static void scoreDatabaseThread(int *scores, int type, Chain **queries,
-                                int queriesLen, ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
-                                int *indexes, int indexesLen, int *cards, int cardsLen, int useSimd)
-{
+                                int queriesLen,
+                                ChainDatabaseGpu *chainDatabaseGpu,
+                                Scorer *scorer, int *indexes, int indexesLen,
+                                int *cards, int cardsLen, int useSimd) {
 
-    ShortDatabase *shortDatabase = chainDatabaseGpu->shortDatabase;
-    LongDatabase *longDatabase = chainDatabaseGpu->longDatabase;
+  ShortDatabase *shortDatabase = chainDatabaseGpu->shortDatabase;
+  LongDatabase *longDatabase = chainDatabaseGpu->longDatabase;
 
-    int *longIndexes = chainDatabaseGpu->longIndexes;
-    int longIndexesLen = chainDatabaseGpu->longIndexesLen;
+  int *longIndexes = chainDatabaseGpu->longIndexes;
+  int longIndexesLen = chainDatabaseGpu->longIndexesLen;
 
-    Chain **database = chainDatabaseGpu->database;
-    int databaseLen = chainDatabaseGpu->databaseLen;
+  Chain **database = chainDatabaseGpu->database;
+  int databaseLen = chainDatabaseGpu->databaseLen;
 
-    if (indexes != NULL && indexesLen == 0)
-    {
-        return;
-    }
+  if (indexes != NULL && indexesLen == 0) {
+    return;
+  }
 
-    int useGpu = indexes == NULL || indexesLen > 100;
+  int useGpu = indexes == NULL || indexesLen > 100;
 
-    int withThread = !useGpu || withThreads();
+  int withThread = !useGpu || withThreads();
 
-    //**************************************************************************
-    // FILTER LONG INDEXES
+  //**************************************************************************
+  // FILTER LONG INDEXES
 
-    int *
-        longIndexesNew;
-    int longIndexesNewLen;
+  int *longIndexesNew;
+  int longIndexesNewLen;
 
-    filterLongIndexesArray(&longIndexesNew, &longIndexesNewLen, longIndexes,
-                           longIndexesLen, indexes, indexesLen, databaseLen - 1);
+  filterLongIndexesArray(&longIndexesNew, &longIndexesNewLen, longIndexes,
+                         longIndexesLen, indexes, indexesLen, databaseLen - 1);
 
-    //**************************************************************************
+  //**************************************************************************
 
-    //**************************************************************************
-    // PREPARE CPU
+  //**************************************************************************
+  // PREPARE CPU
 
-    Mutex mutex;
-    mutexCreate(&mutex);
+  Mutex mutex;
+  mutexCreate(&mutex);
 
-    ContextCpu contextCpu;
-    contextCpu.scores = scores;
-    contextCpu.type = type;
-    contextCpu.queries = queries;
-    contextCpu.queriesLen = queriesLen;
-    contextCpu.database = database;
-    contextCpu.databaseLen = databaseLen;
-    contextCpu.scorer = scorer;
-    contextCpu.indexes = useGpu ? longIndexesNew : indexes;
-    contextCpu.indexesLen = useGpu ? longIndexesNewLen : indexesLen;
-    contextCpu.useSimd = useSimd;
-    contextCpu.mutex = &mutex;
-    contextCpu.lastIndexSolved = 0;
-    contextCpu.cancelled = 0;
+  ContextCpu contextCpu;
+  contextCpu.scores = scores;
+  contextCpu.type = type;
+  contextCpu.queries = queries;
+  contextCpu.queriesLen = queriesLen;
+  contextCpu.database = database;
+  contextCpu.databaseLen = databaseLen;
+  contextCpu.scorer = scorer;
+  contextCpu.indexes = useGpu ? longIndexesNew : indexes;
+  contextCpu.indexesLen = useGpu ? longIndexesNewLen : indexesLen;
+  contextCpu.useSimd = useSimd;
+  contextCpu.mutex = &mutex;
+  contextCpu.lastIndexSolved = 0;
+  contextCpu.cancelled = 0;
 
-    //**************************************************************************
+  //**************************************************************************
 
-    //**************************************************************************
-    // SOLVE MULTICARDED
+  //**************************************************************************
+  // SOLVE MULTICARDED
 
-    TIMER_START("Database solving GPU");
+  TIMER_START("Database solving GPU");
 
-    Thread thread;
+  Thread thread;
 
-    if (withThread)
-    {
-        threadCreate(&thread, scoreCpu, (void *)&contextCpu);
-    }
+  if (withThread) {
+    threadCreate(&thread, scoreCpu, (void *)&contextCpu);
+  }
 
-    if (useGpu)
-    {
+  if (useGpu) {
 
-        TIMER_START("Short solve");
+    TIMER_START("Short solve");
 
-        if (useSimd)
-        {
-            scoreShortDatabasesPartiallyGpu(scores, type, queries, queriesLen,
-                                            shortDatabase, scorer, indexes, indexesLen, 128, cards, cardsLen, NULL);
-        }
-        else
-        {
-            scoreShortDatabasesGpu(scores, type, queries, queriesLen,
-                                   shortDatabase, scorer, indexes, indexesLen, cards, cardsLen, NULL);
-        }
-
-        TIMER_STOP;
-
-        int longInexesSolved = 0;
-        if (withThread)
-        {
-            mutexLock(contextCpu.mutex);
-
-            longInexesSolved = contextCpu.lastIndexSolved;
-            contextCpu.cancelled = 1;
-
-            mutexUnlock(contextCpu.mutex);
-        }
-
-        LOG("Long indexes solved CPU: %d", longInexesSolved);
-
-        TIMER_START("Long solve");
-
-        printf("%d %d\n", longIndexesLen, longIndexesNewLen);
-        if (!withThread || (withThread && longInexesSolved < longIndexesNewLen))
-        {
-            scoreLongDatabasesGpu(scores, type, queries, queriesLen,
-                                  longDatabase, scorer, longIndexesNew + longInexesSolved,
-                                  longIndexesNewLen - longInexesSolved, cards, cardsLen, NULL);
-        }
-
-        TIMER_STOP;
-    }
-
-    if (withThread)
-    {
-        threadJoin(thread);
+    if (useSimd) {
+      scoreShortDatabasesPartiallyGpu(scores, type, queries, queriesLen,
+                                      shortDatabase, scorer, indexes,
+                                      indexesLen, 128, cards, cardsLen, NULL);
+    } else {
+      scoreShortDatabasesGpu(scores, type, queries, queriesLen, shortDatabase,
+                             scorer, indexes, indexesLen, cards, cardsLen,
+                             NULL);
     }
 
     TIMER_STOP;
 
-    //**************************************************************************
+    int longInexesSolved = 0;
+    if (withThread) {
+      mutexLock(contextCpu.mutex);
 
-    //**************************************************************************
-    // SOLVE OVERFLOWS
+      longInexesSolved = contextCpu.lastIndexSolved;
+      contextCpu.cancelled = 1;
 
-    if (useSimd)
-    {
-
-        TIMER_START("Solving overflows");
-
-        int maxScore = scorerGetMaxScore(scorer);
-
-        for (int i = 0; i < queriesLen; ++i)
-        {
-
-            int *overflows = (int *)malloc(databaseLen * sizeof(int));
-            int overflowsLen = 0;
-
-            for (int j = 0; j < databaseLen; ++j)
-            {
-                if (scores[i * databaseLen + j] == 128)
-                {
-                    overflows[overflowsLen++] = j;
-                }
-            }
-
-            scoreDatabaseThread(scores + i * databaseLen, type, queries + i, 1,
-                                chainDatabaseGpu, scorer, overflows, overflowsLen, cards, cardsLen, 0);
-
-            free(overflows);
-        }
-
-        TIMER_STOP;
+      mutexUnlock(contextCpu.mutex);
     }
-    else
-    {
+
+    LOG("Long indexes solved CPU: %d", longInexesSolved);
+
+    TIMER_START("Long solve");
+
+    if (!withThread || (withThread && longInexesSolved < longIndexesNewLen)) {
+      scoreLongDatabasesGpu(scores, type, queries, queriesLen, longDatabase,
+                            scorer, longIndexesNew + longInexesSolved,
+                            longIndexesNewLen - longInexesSolved, cards,
+                            cardsLen, NULL);
+    }
+
+    TIMER_STOP;
+  }
+
+  if (withThread) {
+    threadJoin(thread);
+  }
+
+  TIMER_STOP;
+
+  //**************************************************************************
+
+  //**************************************************************************
+  // SOLVE OVERFLOWS
+
+  if (useSimd) {
+
+    TIMER_START("Solving overflows");
+
+    int maxScore = scorerGetMaxScore(scorer);
+
+    for (int i = 0; i < queriesLen; ++i) {
+
+      int *overflows = (int *)malloc(databaseLen * sizeof(int));
+      int overflowsLen = 0;
+
+      for (int j = 0; j < databaseLen; ++j) {
+        if (scores[i * databaseLen + j] == 128) {
+          overflows[overflowsLen++] = j;
+        }
+      }
+
+      scoreDatabaseThread(scores + i * databaseLen, type, queries + i, 1,
+                          chainDatabaseGpu, scorer, overflows, overflowsLen,
+                          cards, cardsLen, 0);
+
+      free(overflows);
+    }
+
+    TIMER_STOP;
+  } else {
 
 #ifdef DEBUG
 
-        int overflows = 0;
-        for (int i = 0; i < queriesLen; ++i)
-        {
-            for (int j = 0; j < databaseLen; ++j)
-            {
-                if (scores[i * databaseLen + j] >= 128)
-                {
-                    overflows++;
-                }
-            }
+    int overflows = 0;
+    for (int i = 0; i < queriesLen; ++i) {
+      for (int j = 0; j < databaseLen; ++j) {
+        if (scores[i * databaseLen + j] >= 128) {
+          overflows++;
         }
+      }
+    }
 
-        LOG("Scores over 127: %d", overflows);
+    LOG("Scores over 127: %d", overflows);
 #endif
-    }
+  }
 
-    //**************************************************************************
+  //**************************************************************************
 
-    //**************************************************************************
-    // CLEAN MEMORY
+  //**************************************************************************
+  // CLEAN MEMORY
 
-    mutexDelete(&mutex);
+  mutexDelete(&mutex);
 
-    if (longIndexesNew != longIndexes)
-    {
-        free(longIndexesNew);
-    }
+  if (longIndexesNew != longIndexes) {
+    free(longIndexesNew);
+  }
 
-    //**************************************************************************
+  //**************************************************************************
 }
 
 //------------------------------------------------------------------------------
@@ -582,181 +561,168 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
 //------------------------------------------------------------------------------
 // CPU WORKER
 
-static void *scoreCpu(void *param)
-{
+static void *scoreCpu(void *param) {
 
-    ContextCpu *context = (ContextCpu *)param;
+  ContextCpu *context = (ContextCpu *)param;
 
-    int *scores = context->scores;
-    int type = context->type;
-    Chain **queries = context->queries;
-    int queriesLen = context->queriesLen;
-    Chain **database_ = context->database;
-    int databaseLen = context->databaseLen;
-    Scorer *scorer = context->scorer;
-    int *indexes = context->indexes;
-    int indexesLen = context->indexesLen;
-    int useSimd = context->useSimd;
-    Mutex *mutex = context->mutex;
+  int *scores = context->scores;
+  int type = context->type;
+  Chain **queries = context->queries;
+  int queriesLen = context->queriesLen;
+  Chain **database_ = context->database;
+  int databaseLen = context->databaseLen;
+  Scorer *scorer = context->scorer;
+  int *indexes = context->indexes;
+  int indexesLen = context->indexesLen;
+  int useSimd = context->useSimd;
+  Mutex *mutex = context->mutex;
 
-    if (indexesLen == 0)
-    {
-        return NULL;
-    }
-
-    TIMER_START("Outter solving CPU: %d", indexesLen);
-
-    //**************************************************************************
-    // CREATE DATABASE
-
-    Chain **database = (Chain **)malloc(indexesLen * sizeof(Chain *));
-
-    for (int i = 0; i < indexesLen; ++i)
-    {
-        database[i] = database_[indexes[i]];
-    }
-
-    //**************************************************************************
-
-    //**************************************************************************
-    // PREPARE WORKER CONTEXT
-
-    int *scoresCpu = (int *)malloc(queriesLen * indexesLen * sizeof(int));
-    int lastQuery = 0;
-
-    ContextWorkerCpu workerContext;
-    workerContext.scores = scoresCpu;
-    workerContext.type = type;
-    workerContext.queries = queries;
-    workerContext.queriesLen = queriesLen;
-    workerContext.database = database;
-    workerContext.databaseLen = indexesLen;
-    workerContext.scorer = scorer;
-    workerContext.useSimd = useSimd;
-    workerContext.mutex = mutex;
-    workerContext.lastQuery = &lastQuery;
-    workerContext.lastTarget = &(context->lastIndexSolved);
-    workerContext.cancelled = &(context->cancelled);
-
-    //**************************************************************************
-
-    //**************************************************************************
-    // SOLVE MULTITHREADED
-
-    int tasksNmr = CPU_THREADPOOL_STEP;
-    ThreadPoolTask **tasks = (ThreadPoolTask **)malloc(tasksNmr * sizeof(ThreadPoolTask *));
-
-    int over = 0;
-    while (!over)
-    {
-
-        for (int i = 0; i < tasksNmr; ++i)
-        {
-            tasks[i] = threadPoolSubmitToFront(scoreCpuWorker, &workerContext);
-        }
-
-        for (int i = 0; i < tasksNmr; ++i)
-        {
-            threadPoolTaskWait(tasks[i]);
-            threadPoolTaskDelete(tasks[i]);
-        }
-
-        mutexLock(mutex);
-
-        if (context->cancelled || context->lastIndexSolved >= indexesLen)
-        {
-            over = 1;
-        }
-
-        mutexUnlock(mutex);
-    }
-
-    //**************************************************************************
-
-    //**************************************************************************
-    // SAVE SCORES
-
-    int lastIndexSolved = context->lastIndexSolved;
-
-    for (int i = 0; i < queriesLen; ++i)
-    {
-        for (int j = 0; j < lastIndexSolved; ++j)
-        {
-            scores[i * databaseLen + indexes[j]] = scoresCpu[i * indexesLen + j];
-        }
-    }
-
-    //**************************************************************************
-
-    //**************************************************************************
-    // CLEAN MEMORY
-
-    free(database);
-    free(tasks);
-    free(scoresCpu);
-
-    //**************************************************************************
-
-    TIMER_STOP;
-
+  if (indexesLen == 0) {
     return NULL;
-}
+  }
 
-static void *scoreCpuWorker(void *param)
-{
+  TIMER_START("Outter solving CPU: %d", indexesLen);
 
-    ContextWorkerCpu *context = (ContextWorkerCpu *)param;
+  //**************************************************************************
+  // CREATE DATABASE
 
-    int *scores_ = context->scores;
-    int type = context->type;
-    Chain **queries = context->queries;
-    int queriesLen = context->queriesLen;
-    Chain **database_ = context->database;
-    int databaseLen = context->databaseLen;
-    Scorer *scorer = context->scorer;
-    int useSimd = context->useSimd;
-    Mutex *mutex = context->mutex;
-    int *lastQuery = context->lastQuery;
-    int *lastTarget = context->lastTarget;
-    int *cancelled = context->cancelled;
+  Chain **database = (Chain **)malloc(indexesLen * sizeof(Chain *));
+
+  for (int i = 0; i < indexesLen; ++i) {
+    database[i] = database_[indexes[i]];
+  }
+
+  //**************************************************************************
+
+  //**************************************************************************
+  // PREPARE WORKER CONTEXT
+
+  int *scoresCpu = (int *)malloc(queriesLen * indexesLen * sizeof(int));
+  int lastQuery = 0;
+
+  ContextWorkerCpu workerContext;
+  workerContext.scores = scoresCpu;
+  workerContext.type = type;
+  workerContext.queries = queries;
+  workerContext.queriesLen = queriesLen;
+  workerContext.database = database;
+  workerContext.databaseLen = indexesLen;
+  workerContext.scorer = scorer;
+  workerContext.useSimd = useSimd;
+  workerContext.mutex = mutex;
+  workerContext.lastQuery = &lastQuery;
+  workerContext.lastTarget = &(context->lastIndexSolved);
+  workerContext.cancelled = &(context->cancelled);
+
+  //**************************************************************************
+
+  //**************************************************************************
+  // SOLVE MULTITHREADED
+
+  int tasksNmr = CPU_THREADPOOL_STEP;
+  ThreadPoolTask **tasks =
+      (ThreadPoolTask **)malloc(tasksNmr * sizeof(ThreadPoolTask *));
+
+  int over = 0;
+  while (!over) {
+
+    for (int i = 0; i < tasksNmr; ++i) {
+      tasks[i] = threadPoolSubmitToFront(scoreCpuWorker, &workerContext);
+    }
+
+    for (int i = 0; i < tasksNmr; ++i) {
+      threadPoolTaskWait(tasks[i]);
+      threadPoolTaskDelete(tasks[i]);
+    }
 
     mutexLock(mutex);
 
-    if (*lastQuery >= queriesLen)
-    {
-        *lastQuery = 0;
-        *lastTarget += std::min(CPU_WORKER_STEP, databaseLen - *lastTarget);
+    if (context->cancelled || context->lastIndexSolved >= indexesLen) {
+      over = 1;
     }
-
-    int queryIdx = *lastQuery;
-    int start = *lastTarget;
-    int length = std::min(CPU_WORKER_STEP, databaseLen - start);
-
-    if (start >= databaseLen || *cancelled)
-    {
-        mutexUnlock(mutex);
-        return NULL;
-    }
-
-    (*lastQuery)++;
 
     mutexUnlock(mutex);
+  }
 
-    int *scores = scores_ + queryIdx * databaseLen + start;
+  //**************************************************************************
 
-    Chain *query = queries[queryIdx];
-    Chain **database = database_ + start;
+  //**************************************************************************
+  // SAVE SCORES
 
-    if (useSimd)
-    {
-        scoreDatabasePartiallyCpu(scores, type, query, database, length, scorer, 128);
+  int lastIndexSolved = context->lastIndexSolved;
+
+  for (int i = 0; i < queriesLen; ++i) {
+    for (int j = 0; j < lastIndexSolved; ++j) {
+      scores[i * databaseLen + indexes[j]] = scoresCpu[i * indexesLen + j];
     }
-    else
-    {
-        scoreDatabaseCpu(scores, type, query, database, length, scorer);
-    }
+  }
 
+  //**************************************************************************
+
+  //**************************************************************************
+  // CLEAN MEMORY
+
+  free(database);
+  free(tasks);
+  free(scoresCpu);
+
+  //**************************************************************************
+
+  TIMER_STOP;
+
+  return NULL;
+}
+
+static void *scoreCpuWorker(void *param) {
+
+  ContextWorkerCpu *context = (ContextWorkerCpu *)param;
+
+  int *scores_ = context->scores;
+  int type = context->type;
+  Chain **queries = context->queries;
+  int queriesLen = context->queriesLen;
+  Chain **database_ = context->database;
+  int databaseLen = context->databaseLen;
+  Scorer *scorer = context->scorer;
+  int useSimd = context->useSimd;
+  Mutex *mutex = context->mutex;
+  int *lastQuery = context->lastQuery;
+  int *lastTarget = context->lastTarget;
+  int *cancelled = context->cancelled;
+
+  mutexLock(mutex);
+
+  if (*lastQuery >= queriesLen) {
+    *lastQuery = 0;
+    *lastTarget += std::min(CPU_WORKER_STEP, databaseLen - *lastTarget);
+  }
+
+  int queryIdx = *lastQuery;
+  int start = *lastTarget;
+  int length = std::min(CPU_WORKER_STEP, databaseLen - start);
+
+  if (start >= databaseLen || *cancelled) {
+    mutexUnlock(mutex);
     return NULL;
+  }
+
+  (*lastQuery)++;
+
+  mutexUnlock(mutex);
+
+  int *scores = scores_ + queryIdx * databaseLen + start;
+
+  Chain *query = queries[queryIdx];
+  Chain **database = database_ + start;
+
+  if (useSimd) {
+    scoreDatabasePartiallyCpu(scores, type, query, database, length, scorer,
+                              128);
+  } else {
+    scoreDatabaseCpu(scores, type, query, database, length, scorer);
+  }
+
+  return NULL;
 }
 
 //------------------------------------------------------------------------------
@@ -765,73 +731,64 @@ static void *scoreCpuWorker(void *param)
 // UTILS
 
 static void filterIndexesArray(int **indexesNew, int *indexesNewLen,
-                               int *indexes, int indexesLen, int minIndex, int maxIndex)
-{
+                               int *indexes, int indexesLen, int minIndex,
+                               int maxIndex) {
 
-    if (indexes == NULL)
-    {
-        *indexesNew = NULL;
-        *indexesNewLen = 0;
-        return;
-    }
-
-    *indexesNew = (int *)malloc(indexesLen * sizeof(int));
+  if (indexes == NULL) {
+    *indexesNew = NULL;
     *indexesNewLen = 0;
+    return;
+  }
 
-    for (int i = 0; i < indexesLen; ++i)
-    {
+  *indexesNew = (int *)malloc(indexesLen * sizeof(int));
+  *indexesNewLen = 0;
 
-        int idx = indexes[i];
+  for (int i = 0; i < indexesLen; ++i) {
 
-        if (idx >= minIndex && idx <= maxIndex)
-        {
-            (*indexesNew)[*indexesNewLen] = idx;
-            (*indexesNewLen)++;
-        }
+    int idx = indexes[i];
+
+    if (idx >= minIndex && idx <= maxIndex) {
+      (*indexesNew)[*indexesNewLen] = idx;
+      (*indexesNewLen)++;
     }
+  }
 }
 
 static void filterLongIndexesArray(int **longIndexesNew, int *longIndexesNewLen,
-                                   int *longIndexes, int longIndexesLen, int *indexes, int indexesLen,
-                                   int maxIndex)
-{
+                                   int *longIndexes, int longIndexesLen,
+                                   int *indexes, int indexesLen, int maxIndex) {
 
-    if (indexes == NULL)
-    {
-        *longIndexesNew = longIndexes;
-        *longIndexesNewLen = longIndexesLen;
-        return;
+  if (indexes == NULL) {
+    *longIndexesNew = longIndexes;
+    *longIndexesNewLen = longIndexesLen;
+    return;
+  }
+
+  int *mask = (int *)calloc(maxIndex + 1, sizeof(int));
+
+  for (int i = 0; i < indexesLen; ++i) {
+    mask[indexes[i]] = 1;
+  }
+
+  *longIndexesNew = (int *)malloc(longIndexesLen * sizeof(int));
+  *longIndexesNewLen = 0;
+
+  for (int i = 0; i < longIndexesLen; ++i) {
+    if (mask[longIndexes[i]]) {
+      (*longIndexesNew)[*longIndexesNewLen] = longIndexes[i];
+      (*longIndexesNewLen)++;
     }
+  }
 
-    int *mask = (int *)calloc(maxIndex + 1, sizeof(int));
-
-    for (int i = 0; i < indexesLen; ++i)
-    {
-        mask[indexes[i]] = 1;
-    }
-
-    *longIndexesNew = (int *)malloc(longIndexesLen * sizeof(int));
-    *longIndexesNewLen = 0;
-
-    for (int i = 0; i < longIndexesLen; ++i)
-    {
-        if (mask[longIndexes[i]])
-        {
-            (*longIndexesNew)[*longIndexesNewLen] = longIndexes[i];
-            (*longIndexesNewLen)++;
-        }
-    }
-
-    free(mask);
+  free(mask);
 }
 
-static int int2CmpY(const void *a_, const void *b_)
-{
+static int int2CmpY(const void *a_, const void *b_) {
 
-    sycl::int2 a = *((sycl::int2 *)a_);
-    sycl::int2 b = *((sycl::int2 *)b_);
+  sycl::int2 a = *((sycl::int2 *)a_);
+  sycl::int2 b = *((sycl::int2 *)b_);
 
-    return a.y() - b.y();
+  return a.y() - b.y();
 }
 
 //------------------------------------------------------------------------------
