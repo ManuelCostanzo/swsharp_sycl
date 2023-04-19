@@ -1,15 +1,15 @@
 #!/bin/bash
 
-DATABASE_FOLDER=../..//databases/
+DATABASE_FOLDER=../../databases/
 SWSYCL_FOLDER=../../
 
 default_values() {
-    ITERS=1
-    SYCL_CARD_ID=1
-    CUDA_CARD_ID=0
+    ITERS=10
+    SYCL_CARD_ID=$1
+    CUDA_CARD_ID=$2
     GAP=10
     EXTEND=2
-    THREADS=1
+    THREADS=0
     MATRIX=BLOSUM_62
     ALGORITHM=SW
     MAX_ALIGNS=10
@@ -216,11 +216,14 @@ G9() {
 
 
 #MAIN
-G1 #different work groups (20)
-G2 #ENV_NR database (20)
-G3 #SWIS_PROT (individidual)
-G4 #SWIS_PROT different algorithms (20)
-G5 #SWIS_PROT different matrices (20)
-G6 #DNA small and medium
-G9 #CPU SWIS_PROT (individual)
-# GMULTIPLE
+
+if !$2; then
+    G1 #different work groups (20)
+    G2 #ENV_NR database (20)
+    G3 #SWIS_PROT (individidual)
+    G4 #SWIS_PROT different algorithms (20)
+    G5 #SWIS_PROT different matrices (20)
+    G6 #DNA small and medium
+else
+    G9 #CPU SWIS_PROT (individual)
+fi
