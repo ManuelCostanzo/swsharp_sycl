@@ -3,10 +3,11 @@
 DATABASE_FOLDER=../../databases/
 SWSYCL_FOLDER=../../
 
+SYCL_CARD_ID=$1
+CUDA_CARD_ID=$2
+
 default_values() {
     ITERS=10
-    SYCL_CARD_ID=$1
-    CUDA_CARD_ID=$2
     GAP=10
     EXTEND=2
     THREADS=0
@@ -30,6 +31,7 @@ exec_prot() {
     fi
     
     sleep 5
+    echo "./$SWSYCL_FOLDER/$1/bin/swsharpdb -i $DATABASE_FOLDER/protein/queries/$QUERY -j $DATABASE_FOLDER/protein/$DB -g $GAP -e $EXTEND -T $THREADS --matrix=$MATRIX --algorithm=$ALGORITHM --cards=$CARD_ID --max-aligns=$MAX_ALIGNS --nocache >> $FOLDER/"$QUERY"_$1.txt"
     ./$SWSYCL_FOLDER/$1/bin/swsharpdb -i $DATABASE_FOLDER/protein/queries/$QUERY -j $DATABASE_FOLDER/protein/$DB -g $GAP -e $EXTEND -T $THREADS --matrix=$MATRIX --algorithm=$ALGORITHM --cards=$CARD_ID --max-aligns=$MAX_ALIGNS --nocache >> $FOLDER/"$QUERY"_$1.txt
 }
 
