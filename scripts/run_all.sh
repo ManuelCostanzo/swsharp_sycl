@@ -7,7 +7,7 @@ scriptlist=( ["rtx2070"]="2 0" ["i57400"]="1" ["rtx2070-i57400"]="rtx2070-i57400
 
 for folder in "${!scriptlist[@]}"
 do
-    echo "Executing $folder with args ${scriptlist[$script]}"
+    echo "Executing $folder with args ${scriptlist[$folder]}"
     
     if [ ! -d "$folder" ]; then
         mkdir $folder
@@ -15,7 +15,7 @@ do
     
     cd $folder
     
-    sh ../run.sh ${scriptlist[$script]}
+    sh ../run.sh ${scriptlist[$folder]}
     
     cd ..
 done
