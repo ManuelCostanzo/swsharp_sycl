@@ -217,7 +217,7 @@ G9() {
 
 #MAIN
 
-if [! -d "$2"]; then
+if [ ! -d "$2" ]; then
     G1 #different work groups (20)
     G2 #ENV_NR database (20)
     G3 #SWIS_PROT (individidual)
