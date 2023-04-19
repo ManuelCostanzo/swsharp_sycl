@@ -1,9 +1,9 @@
 #!/bin/bash
 
-
 declare -A scriptlist
 
-scriptlist=( ["rtx2070"]="2 0" ["i57400"]="1" ["rtx2070-i57400"]="rtx2070-i57400 21" )
+scriptlist=( ["gtx1080"]="2 0" ["gtx980"]="4 2" ["E52695"]="1" ["gtx1080-gtx1080"]="23" ["gtx1080-E52695"]="21" )
+
 
 for folder in "${!scriptlist[@]}"
 do
