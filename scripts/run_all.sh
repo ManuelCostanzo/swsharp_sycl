@@ -15,7 +15,7 @@ do
     
     cd $folder
     
-    ./../run.sh ${scriptlist[$script]}
+    sh ../run.sh ${scriptlist[$script]}
     
     cd ..
 done
