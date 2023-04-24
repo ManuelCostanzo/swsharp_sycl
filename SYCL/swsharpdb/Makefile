@@ -21,9 +21,9 @@ ifeq ($(BACK), fpga)
 endif
 
 ifeq ($(BACK), amd)
-	CP = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
-	CU = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
-	LD = clang++ -fsycl -fsycl-targets=amdgcn-amd-amdhsa   -Xsycl-target-backend --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+	CP = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+	CU = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+	LD = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
 endif
 
 
