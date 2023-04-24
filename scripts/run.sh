@@ -31,7 +31,6 @@ exec_prot() {
     fi
     
     sleep 5
-    echo "./$SWSYCL_FOLDER/$1/bin/swsharpdb -i $DATABASE_FOLDER/protein/queries/$QUERY -j $DATABASE_FOLDER/protein/$DB -g $GAP -e $EXTEND -T $THREADS --matrix=$MATRIX --algorithm=$ALGORITHM --cards=$CARD_ID --max-aligns=$MAX_ALIGNS --nocache >> $FOLDER/"$QUERY"_$1.txt"
     ./$SWSYCL_FOLDER/$1/bin/swsharpdb -i $DATABASE_FOLDER/protein/queries/$QUERY -j $DATABASE_FOLDER/protein/$DB -g $GAP -e $EXTEND -T $THREADS --matrix=$MATRIX --algorithm=$ALGORITHM --cards=$CARD_ID --max-aligns=$MAX_ALIGNS --nocache >> $FOLDER/"$QUERY"_$1.txt
 }
 
@@ -216,6 +215,23 @@ G9() {
     done
 }
 
+G99() {
+    default_values
+    DB=uniprot_sprot.fasta
+    FOLDER=G9/sprot/SW
+    mkdir -p $FOLDER
+    ALGORITHM=SW
+    for i in `seq 1 $ITERS`;
+    do
+        QUERY=query_sequences_20.fasta
+        debug
+        exec_prot SYCL
+    done
+}
+
+
+
+
 
 #MAIN
 
@@ -227,5 +243,5 @@ if [ -n "$2" ]; then
     G5 #SWIS_PROT different matrices (20)
     G6 #DNA small and medium
 else
-    G9 #CPU SWIS_PROT (individual)
+    G99 #CPU SWIS_PROT (individual)
 fi

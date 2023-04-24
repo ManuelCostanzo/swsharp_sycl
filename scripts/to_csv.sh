@@ -1,4 +1,4 @@
-run() {
+run_both() {
     echo "$D;QUERY;CUDA (seg);SYCL (seg);CUDA (gflop);SYCL (gflop); CUDA PROM; SYCL PROM" >> $FILE
     for i in `seq 1 $ITERS`;
     do
@@ -10,6 +10,22 @@ run() {
         ROW=";$ID;$CUDA_SEG;$SYCL_SEG;$GFLOPS_CUDA;$GFLOPS_SYCL"
         if [ "$i" == 1 ]; then
             ROW="$ROW; $PROM; $PROM"
+        fi
+        echo $ROW >> $FILE
+    done
+    echo "" >> $FILE
+}
+
+run_single() {
+    echo "$D;QUERY;SYCL (seg);SYCL (gflop); SYCL PROM" >> $FILE
+    for i in `seq 1 $ITERS`;
+    do
+        SYCL_SEG=`cat "$CURRENT_PATH/$query"_SYCL.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
+        GFLOPS_SYCL=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($SYCL_SEG * 1000000000))"`
+        PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -2))))"
+        ROW=";$ID;$SYCL_SEG;$GFLOPS_SYCL"
+        if [ "$i" == 1 ]; then
+            ROW="$ROW; $PROM"
         fi
         echo $ROW >> $FILE
     done
@@ -30,7 +46,7 @@ G1() {
     for D in ORIGINAL 64 128 256 512 1024 dynamic
     do
         CURRENT_PATH=G1/sprot/"$D"/SW
-        run
+        run_both
     done
 }
 
@@ -48,7 +64,7 @@ G2() {
     
     CURRENT_PATH=G2/nr/SW
     D=NR
-    run
+    run_both
 }
 
 G3() {
@@ -66,7 +82,7 @@ G3() {
         D=`echo $query | egrep -o '[0-9]+'`
         ID=$D
         CURRENT_PATH=G3/sprot/SW
-        run
+        run_both
     done
 }
 
@@ -85,7 +101,7 @@ G4() {
     for D in SW NW HW OV
     do
         CURRENT_PATH=G4/sprot/$D
-        run
+        run_both
     done
 }
 
@@ -104,7 +120,7 @@ G5() {
     for D in "BLOSUM_45-10-3" "BLOSUM_45-14-2" "BLOSUM_45-19-1" "BLOSUM_62-06-2" "BLOSUM_62-10-2" "BLOSUM_62-13-1" "BLOSUM_90-06-2" "BLOSUM_90-09-1" "BLOSUM_90-11-1"
     do
         CURRENT_PATH=G5/sprot/$D
-        run
+        run_both
     done
 }
 
@@ -172,11 +188,32 @@ G9() {
     done
 }
 
+G99() {
+    ITERS=10
+    DB_LEN=251837611
+    query=query_sequences_20.fasta
+    ID=44068
+    FILE=G99.txt
+    
+    if [ -f $FILE ] ; then
+        rm $FILE
+    fi
+    
+    CURRENT_PATH=G9/nr/SW
+    D=NR
+    run_single
+}
 
-G1
-G2
-G3
-G4
-G5
-G6
-G9
+
+
+if [ -n "$2" ]; then
+    G1 #different work groups (20)
+    G2 #ENV_NR database (20)
+    G3 #SWIS_PROT (individidual)
+    G4 #SWIS_PROT different algorithms (20)
+    G5 #SWIS_PROT different matrices (20)
+    G6 #DNA small and medium
+else
+    G99 #CPU SWIS_PROT (individual)
+fi
+
