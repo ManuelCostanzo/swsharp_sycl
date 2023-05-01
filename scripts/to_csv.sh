@@ -4,8 +4,8 @@ run_both() {
     do
         CUDA_SEG=`cat "$CURRENT_PATH/$query"_CUDA.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
         SYCL_SEG=`cat "$CURRENT_PATH/$query"_SYCL.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
-        GFLOPS_CUDA=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($CUDA_SEG * 1000000000))"`
-        GFLOPS_SYCL=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($SYCL_SEG * 1000000000))"`
+        GFLOPS_CUDA="=((MULTIPLY($ID, $DB_LEN)) / MULTIPLY($CUDA_SEG, 1000000000))"
+        GFLOPS_SYCL="=((MULTIPLY($ID, $DB_LEN)) / MULTIPLY($SYCL_SEG, 1000000000))"
         PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -2))))"
         ROW=";$ID;$CUDA_SEG;$SYCL_SEG;$GFLOPS_CUDA;$GFLOPS_SYCL"
         if [ "$i" == 1 ]; then
@@ -21,7 +21,7 @@ run_single() {
     for i in `seq 1 $ITERS`;
     do
         SYCL_SEG=`cat "$CURRENT_PATH/$query"_SYCL.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
-        GFLOPS_SYCL=`perl -e "print ((('$ID' + 0) * $DB_LEN) / ($SYCL_SEG * 1000000000))"`
+        GFLOPS_SYCL="=((MULTIPLY($ID, $DB_LEN)) / MULTIPLY($SYCL_SEG, 1000000000))"
         PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -2))))"
         ROW=";$ID;$SYCL_SEG;$GFLOPS_SYCL"
         if [ "$i" == 1 ]; then
