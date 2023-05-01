@@ -4,8 +4,8 @@ run_both() {
     do
         CUDA_SEG=`cat "$CURRENT_PATH/$query"_CUDA.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
         SYCL_SEG=`cat "$CURRENT_PATH/$query"_SYCL.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
-        GFLOPS_CUDA="=((MULTIPLY($ID, $DB_LEN)) / MULTIPLY($CUDA_SEG, 1000000000))"
-        GFLOPS_SYCL="=((MULTIPLY($ID, $DB_LEN)) / MULTIPLY($SYCL_SEG, 1000000000))"
+        GFLOPS_CUDA="=((MULTIPLY($ID, $DB_LEN)) / MULTIPLY(VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)))), 1000000000))"
+        GFLOPS_SYCL="=((MULTIPLY($ID, $DB_LEN)) / MULTIPLY(VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)))), 1000000000))"
         PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -2))))"
         ROW=";$ID;$CUDA_SEG;$SYCL_SEG;$GFLOPS_CUDA;$GFLOPS_SYCL"
         if [ "$i" == 1 ]; then
