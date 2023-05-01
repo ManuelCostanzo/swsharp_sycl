@@ -22,7 +22,7 @@ run_single() {
     do
         SYCL_SEG=`cat "$CURRENT_PATH/$query"_SYCL.txt | grep  "TIME" | egrep -o '[0-9.]+' | head -$i | tail -1`
         GFLOPS_SYCL="=((MULTIPLY($ID, $DB_LEN)) / MULTIPLY($SYCL_SEG, 1000000000))"
-        PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -2)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -2))))"
+        PROM="=VALUE(AVERAGE(INDIRECT(ADDRESS(ROW(),COLUMN() -1)): INDIRECT(ADDRESS(ROW() + $ITERS,COLUMN() -1))))"
         ROW=";$ID;$SYCL_SEG;$GFLOPS_SYCL"
         if [ "$i" == 1 ]; then
             ROW="$ROW; $PROM"
@@ -193,14 +193,14 @@ G99() {
     DB_LEN=251837611
     query=query_sequences_20.fasta
     ID=44068
-    FILE=G99.txt
+    FILE=G9.txt
     
     if [ -f $FILE ] ; then
         rm $FILE
     fi
     
-    CURRENT_PATH=G9/nr/SW
-    D=NR
+    CURRENT_PATH=G9/sprot/SW
+    D=SPROT
     run_single
 }
 
@@ -216,4 +216,3 @@ if [ -n "$2" ]; then
 else
     G99 #CPU SWIS_PROT (individual)
 fi
-
