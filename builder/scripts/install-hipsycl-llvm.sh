@@ -6,7 +6,7 @@ HIPSYCL_PKG_LLVM_REPO_BRANCH=${HIPSYCL_PKG_LLVM_REPO_BRANCH:-llvmorg-${HIPSYCL_P
 
 HIPSYCL_PKG_LLVM_VERSION=${HIPSYCL_PKG_LLVM_VERSION_MAJOR}.${HIPSYCL_PKG_LLVM_VERSION_MINOR}.${HIPSYCL_PKG_LLVM_VERSION_PATCH}
 
-HIPSYCL_PKG_LLVM_REPO_BRANCH=${HIPSYCL_PKG_LLVM_REPO_BRANCH:-release/15.x}
+HIPSYCL_PKG_LLVM_REPO_BRANCH=${HIPSYCL_PKG_LLVM_REPO_BRANCH:-release/16.x}
 HIPSYCL_INSTALL_PREFIX=${HIPSYCL_INSTALL_PREFIX:-/opt/hipSYCL}
 HIPSYCL_LLVM_BUILD_DIR=${HIPSYCL_LLVM_BUILD_DIR:-/opt/build/llvm-vanilla}
 
@@ -22,24 +22,18 @@ if [ -d "$HIPSYCL_LLVM_BUILD_DIR" ]; then
        fi
 else
 
-echo "Cloning LLVM $HIPSYCL_PKG_LLVM_REPO_BRANCH"
-git clone -b $HIPSYCL_PKG_LLVM_REPO_BRANCH https://github.com/llvm/llvm-project $HIPSYCL_LLVM_BUILD_DIR
+echo "Cloning LLVM HIPSYCL_PKG_LLVM_REPO_BRANCH"
+#git clone -b $HIPSYCL_PKG_LLVM_REPO_BRANCH https://github.com/llvm/llvm-project $HIPSYCL_LLVM_BUILD_DIR
 #git clone https://github.com/llvm/llvm-project $HIPSYCL_LLVM_BUILD_DIR
+wget https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-16.0.4.tar.gz -P $HIPSYCL_LLVM_BUILD_DIR
+tar -xzvf $HIPSYCL_LLVM_BUILD_DIR/llvmorg-16.0.4.tar.gz  --directory $HIPSYCL_LLVM_BUILD_DIR
 fi
-
-case $HIPSYCL_PKG_LLVM_VERSION in
-	9.0.1)
-		echo "Applying patch on $HIPSYCL_PKG_LLVM_VERSION"
-		sed -i 's/CHECK_SIZE_AND_OFFSET(ipc_perm, mode);//g' $HIPSYCL_LLVM_BUILD_DIR/compiler-rt/lib/sanitizer_common/sanitizer_platform_limits_posix.cc
-		;;
-esac
-
 
 CC=${HIPSYCL_BASE_CC:-cc}
 CXX=${HIPSYCL_BASE_CXX:-c++}
 BUILD_TYPE=Release
 HIPSYCL_LLVM_INSTALL_PREFIX=/opt/hipSYCL/llvm
-TARGETS_TO_BUILD="AMDGPU;NVPTX;X86"
+TARGETS_TO_BUILD="AMDGPU;NVPTX;X86;SPIRV"
 NUMTHREADS=`nproc`
 
 CMAKE_OPTIONS="-DLLVM_ENABLE_PROJECTS=clang;compiler-rt;lld;openmp \
