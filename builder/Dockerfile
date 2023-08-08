@@ -27,7 +27,7 @@ RUN sh -c 'echo kernel.perf_event_paranoid=2 > /etc/sysctl.d/local.conf'
 #### END - Install CUDA 11.7.0
 
 #### BEGIN - Install oneAPI 2022.2.0
-RUN wget https://registrationcenter-download.intel.com/akdlm/irc_nas/18673/l_BaseKit_p_2022.2.0.262.sh -O /tmp/oneapi_install.sh
+RUN wget https://registrationcenter-download.intel.com/akdlm/irc_nas/19079/l_BaseKit_p_2023.0.0.25537.sh -O /tmp/oneapi_install.sh
 RUN sh /tmp/oneapi_install.sh -a --silent --eula accept
 RUN printf "source /opt/intel/oneapi/setvars.sh\n" >> ~/.bashrc
 #### END - Install oneAPI 2022.2.0
@@ -57,9 +57,11 @@ RUN printf "export DPCPP_HOME=/opt/build/intel\nexport PATH=\$DPCPP_HOME/llvm/bu
 #### END - Install INTEL-LLVM
 
 #### BEGIN Install HIPSYCL & LLVM
-# RUN sh /scripts/install-hipsycl-llvm.sh
-# RUN sh /scripts/install-hipsycl.sh
-# RUN printf "export DPCPP_HOME=/opt/hipSYCL\nexport PATH=\$DPCPP_HOME/llvm/bin:\$PATH\nexport LD_LIBRARY_PATH=\$DPCPP_HOME/llvm/lib:\$LD_LIBRARY_PATH\n" >> ~/.bashrc
+RUN sh /scripts/install-hipsycl-llvm.sh
+RUN sh /scripts/install-hipsycl.sh
+RUN printf "export DPCPP_HOME=/opt/hipSYCL\nexport PATH=\$DPCPP_HOME/llvm/bin:\$PATH\nexport LD_LIBRARY_PATH=\$DPCPP_HOME/llvm/lib:\$LD_LIBRARY_PATH\n" >> ~/.bashrc
 #### END Install HIPSYCL & LLVM
+
+RUN sed -i 's/#define CUDA_VERSION 11070/#define CUDA_VERSION 10020/' /usr/local/cuda/include/cuda.h
 
 WORKDIR /app
