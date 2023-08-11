@@ -92,8 +92,8 @@ RUN sed -i '/source \/opt\/intel\/oneapi\/setvars.sh/d' ~/.bashrc
 COPY /builder/scripts/install-llvm.sh /scripts/install-llvm.sh
 RUN sh /scripts/install-llvm.sh
 
-# COPY /builder/scripts/install-opensycl.sh /scripts/install-opensycl.sh
-# RUN sh /scripts/install-opensycl.sh
+COPY /builder/scripts/install-opensycl.sh /scripts/install-opensycl.sh
+RUN sh /scripts/install-opensycl.sh
 # RUN printf "export PATH=/opt/opensycl/llvm/bin:\$PATH\nexport LD_LIBRARY_PATH=/opt/opensycl/llvm/lib:\$LD_LIBRARY_PATH\n" >> ~/.bashrc
 #### END Install opensycl & LLVM
 

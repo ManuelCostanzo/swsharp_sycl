@@ -11,6 +11,7 @@ OPENSYCL_BUILD_DIR=/tmp/openSYCL-installer
 OPENSYCL_LLVM_DIR=/opt/llvm/lib/cmake/llvm/
 
 
+ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/libcuda.so.1
 rm -rf $OPENSYCL_BUILD_DIR
 git clone --recurse-submodules -b develop https://github.com/OpenSYCL/OpenSYCL $OPENSYCL_BUILD_DIR
 
@@ -29,4 +30,3 @@ cmake \
 ..
 
 make -j `nproc` install
-ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/libcuda.so.1
