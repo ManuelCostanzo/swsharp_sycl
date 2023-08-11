@@ -88,14 +88,14 @@ RUN sed -i '/source \/opt\/intel\/oneapi\/setvars.sh/d' ~/.bashrc
 
 #### END - Install INTEL-LLVM
 
-#### BEGIN Install HIPSYCL & LLVM
-COPY /builder/scripts/install-hipsycl-llvm.sh /scripts/install-hipsycl-llvm.sh
-RUN sh /scripts/install-hipsycl-llvm.sh
+#### BEGIN Install OPENSYCL & LLVM
+COPY /builder/scripts/install-llvm.sh /scripts/install-llvm.sh
+RUN sh /scripts/install-llvm.sh
 
-COPY /builder/scripts/install-hipsycl.sh /scripts/install-hipsycl.sh
-RUN sh /scripts/install-hipsycl.sh
-# RUN printf "export PATH=/opt/hipSYCL/llvm/bin:\$PATH\nexport LD_LIBRARY_PATH=/opt/hipSYCL/llvm/lib:\$LD_LIBRARY_PATH\n" >> ~/.bashrc
-#### END Install HIPSYCL & LLVM
+# COPY /builder/scripts/install-opensycl.sh /scripts/install-opensycl.sh
+# RUN sh /scripts/install-opensycl.sh
+# RUN printf "export PATH=/opt/opensycl/llvm/bin:\$PATH\nexport LD_LIBRARY_PATH=/opt/opensycl/llvm/lib:\$LD_LIBRARY_PATH\n" >> ~/.bashrc
+#### END Install opensycl & LLVM
 
 
 WORKDIR /app

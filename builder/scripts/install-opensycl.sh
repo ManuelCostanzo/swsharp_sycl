@@ -1,17 +1,17 @@
 #!/bin/bash
-export LD_LIBRARY_PATH=/opt/openSYCL/llvm/lib/:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/opt/rocm/lib/:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/opt/rocm/hip/lib/:$LD_LIBRARY_PATH
-export PATH=/opt/openSYCL/llvm/bin:$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/llvm/lib/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/hip/lib/
+export PATH=/opt/llvm/bin:$PATH
 export PATH=/opt/rocm/bin:$PATH
 export OPENSYCL_INSTALL_PREFIX=/opt/openSYCL
 
 set -e
 OPENSYCL_BUILD_DIR=/tmp/openSYCL-installer
-OPENSYCL_LLVM_DIR=/opt/openSYCL/llvm/lib/
+OPENSYCL_LLVM_DIR=/opt/llvm/lib/cmake/llvm/
 
 
-echo "Cloning openSYCL"
+rm -rf $OPENSYCL_BUILD_DIR
 git clone --recurse-submodules -b develop https://github.com/OpenSYCL/OpenSYCL $OPENSYCL_BUILD_DIR
 
 mkdir -p $OPENSYCL_BUILD_DIR/build
@@ -29,3 +29,4 @@ cmake \
 ..
 
 make -j `nproc` install
+ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/lib/libcuda.so.1
