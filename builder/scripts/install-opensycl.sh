@@ -1,5 +1,5 @@
 #!/bin/bash
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/llvm/lib/
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/llvm-17/bin/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/lib/
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/rocm/hip/lib/
 export PATH=/opt/llvm/bin:$PATH
@@ -18,13 +18,14 @@ git clone --recurse-submodules -b develop https://github.com/OpenSYCL/OpenSYCL $
 mkdir -p $OPENSYCL_BUILD_DIR/build
 cd $OPENSYCL_BUILD_DIR/build
 
+#-DWITH_SSCP_COMPILER=OFF \
+#-DWITH_CUDA_BACKEND=ON \
+#-DWITH_ROCM_BACKEND=ON \
+
 cmake \
+-DLLVM_DIR=/usr/lib/llvm-17/cmake \
 -DWITH_ACCELERATED_CPU=ON \
--DWITH_SSCP_COMPILER=ON \
 -DWITH_CPU_BACKEND=ON \
--DWITH_CUDA_BACKEND=ON \
--DWITH_ROCM_BACKEND=ON \
--DLLVM_DIR=$OPENSYCL_LLVM_DIR \
 -DROCM_PATH=/opt/rocm \
 -DCMAKE_INSTALL_PREFIX=$OPENSYCL_INSTALL_PREFIX \
 ..
