@@ -7,14 +7,12 @@
 #define SYCL_LANGUAGE_VERSION 1
 #include "swsharp/swsharp.h"
 
-static FILE *fileSafeOpen(const char *path, const char *mode)
-{
+static FILE *fileSafeOpen(const char *path, const char *mode) {
   FILE *f = fopen(path, mode);
   return f;
 }
 
-double dwalltime()
-{
+double dwalltime() {
   double sec;
   struct timeval tv;
 
@@ -23,20 +21,17 @@ double dwalltime()
   return sec;
 }
 
-#define ASSERT(expr, fmt, ...)                              \
-  do                                                        \
-  {                                                         \
-    if (!(expr))                                            \
-    {                                                       \
-      fprintf(stderr, "[ERROR]: " fmt "\n", ##__VA_ARGS__); \
-      exit(-1);                                             \
-    }                                                       \
+#define ASSERT(expr, fmt, ...)                                                 \
+  do {                                                                         \
+    if (!(expr)) {                                                             \
+      fprintf(stderr, "[ERROR]: " fmt "\n", ##__VA_ARGS__);                    \
+      exit(-1);                                                                \
+    }                                                                          \
   } while (0)
 
 #define CHAR_INT_LEN(x) (sizeof(x) / sizeof(CharInt))
 
-typedef struct CharInt
-{
+typedef struct CharInt {
   const char *format;
   const int code;
 } CharInt;
@@ -72,8 +67,7 @@ static int getAlgorithm(char *optarg);
 
 static void help();
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
   char *queryPath = NULL;
   char *targetPath = NULL;
@@ -96,18 +90,15 @@ int main(int argc, char *argv[])
 
   int forceCpu = 0;
 
-  while (1)
-  {
+  while (1) {
 
     char argument = getopt_long(argc, argv, "i:j:g:e:h", options, NULL);
 
-    if (argument == -1)
-    {
+    if (argument == -1) {
       break;
     }
 
-    switch (argument)
-    {
+    switch (argument) {
     case 'i':
       queryPath = optarg;
       break;
@@ -154,16 +145,12 @@ int main(int argc, char *argv[])
   ASSERT(queryPath != NULL, "missing option -i (query file)");
   ASSERT(targetPath != NULL, "missing option -j (target file)");
 
-  if (forceCpu)
-  {
+  if (forceCpu) {
     cards = NULL;
     cardsLen = 0;
-  }
-  else
-  {
+  } else {
 
-    if (cardsLen == -1)
-    {
+    if (cardsLen == -1) {
       cudaGetCards(&cards, &cardsLen);
     }
 
@@ -181,10 +168,10 @@ int main(int argc, char *argv[])
   readFastaChain(&query, queryPath);
   readFastaChain(&target, targetPath);
 
+  loadQueues(cards, cardsLen);
   threadPoolInitialize(1);
 
-  if (scoreOnly)
-  {
+  if (scoreOnly) {
 
     int score;
     scorePair(&score, algorithm, query, target, scorer, cards, cardsLen, NULL);
@@ -192,9 +179,7 @@ int main(int argc, char *argv[])
     time = dwalltime() - time;
 
     outputScore(score, query, target, scorer, out);
-  }
-  else
-  {
+  } else {
 
     Alignment *alignment;
     alignPair(&alignment, algorithm, query, target, scorer, cards, cardsLen,
@@ -215,7 +200,8 @@ int main(int argc, char *argv[])
   //     file, "SW#N;%s;%s;%d;%d;%d;%d;%d,%lf;%lf\n", queryPath, targetPath,
   //     gapOpen, gapExtend, cardsLen, chainGetLength(query),
   //     chainGetLength(target), time,
-  //     ((long int)(chainGetLength(query)) * (long int)(chainGetLength(target))) /
+  //     ((long int)(chainGetLength(query)) * (long
+  //     int)(chainGetLength(target))) /
   //         (time * 1000000000));
 
   printf("TIME: %lf\n", time);
@@ -231,27 +217,22 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-static void getCudaCards(int **cards, int *cardsLen, char *optarg)
-{
+static void getCudaCards(int **cards, int *cardsLen, char *optarg) {
 
   *cardsLen = strlen(optarg);
   *cards = (int *)malloc(*cardsLen * sizeof(int));
 
   int i;
-  for (i = 0; i < *cardsLen; ++i)
-  {
+  for (i = 0; i < *cardsLen; ++i) {
     (*cards)[i] = optarg[i] - '0';
   }
 }
 
-static int getOutFormat(char *optarg)
-{
+static int getOutFormat(char *optarg) {
 
   int i;
-  for (i = 0; i < CHAR_INT_LEN(outFormats); ++i)
-  {
-    if (strcmp(outFormats[i].format, optarg) == 0)
-    {
+  for (i = 0; i < CHAR_INT_LEN(outFormats); ++i) {
+    if (strcmp(outFormats[i].format, optarg) == 0) {
       return outFormats[i].code;
     }
   }
@@ -259,14 +240,11 @@ static int getOutFormat(char *optarg)
   ASSERT(0, "unknown out format %s", optarg);
 }
 
-static int getAlgorithm(char *optarg)
-{
+static int getAlgorithm(char *optarg) {
 
   int i;
-  for (i = 0; i < CHAR_INT_LEN(algorithms); ++i)
-  {
-    if (strcmp(algorithms[i].format, optarg) == 0)
-    {
+  for (i = 0; i < CHAR_INT_LEN(algorithms); ++i) {
+    if (strcmp(algorithms[i].format, optarg) == 0) {
       return algorithms[i].code;
     }
   }
@@ -274,8 +252,7 @@ static int getAlgorithm(char *optarg)
   ASSERT(0, "unknown algorithm %s", optarg);
 }
 
-static void help()
-{
+static void help() {
   printf(
       "usage: swsharpn -i <query file> -j <target file> [arguments ...]\n"
       "\n"

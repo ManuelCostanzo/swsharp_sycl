@@ -8,14 +8,12 @@
 #include "swsharp/evalue.h"
 #include "swsharp/swsharp.h"
 
-static FILE *fileSafeOpen(const char *path, const char *mode)
-{
+static FILE *fileSafeOpen(const char *path, const char *mode) {
   FILE *f = fopen(path, mode);
   return f;
 }
 
-double dwalltime()
-{
+double dwalltime() {
   double sec;
   struct timeval tv;
 
@@ -24,26 +22,22 @@ double dwalltime()
   return sec;
 }
 
-#define ASSERT(expr, fmt, ...)                              \
-  do                                                        \
-  {                                                         \
-    if (!(expr))                                            \
-    {                                                       \
-      fprintf(stderr, "[ERROR]: " fmt "\n", ##__VA_ARGS__); \
-      exit(-1);                                             \
-    }                                                       \
+#define ASSERT(expr, fmt, ...)                                                 \
+  do {                                                                         \
+    if (!(expr)) {                                                             \
+      fprintf(stderr, "[ERROR]: " fmt "\n", ##__VA_ARGS__);                    \
+      exit(-1);                                                                \
+    }                                                                          \
   } while (0)
 
 #define CHAR_INT_LEN(x) (sizeof(x) / sizeof(CharInt))
 
-typedef struct CharInt
-{
+typedef struct CharInt {
   const char *format;
   const int code;
 } CharInt;
 
-typedef struct ValueFunctionParam
-{
+typedef struct ValueFunctionParam {
   Scorer *scorer;
   int totalLength;
 } ValueFunctionParam;
@@ -84,8 +78,7 @@ static void valueFunction(double *values, int *scores, Chain *query,
                           Chain **database, int databaseLen, int *cards,
                           int cardsLen, void *param);
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
   char *queryPath = NULL;
   char *databasePath = NULL;
@@ -112,18 +105,15 @@ int main(int argc, char *argv[])
 
   int threads = 8;
 
-  while (1)
-  {
+  while (1) {
 
     char argument = getopt_long(argc, argv, "i:j:g:e:hT:", options, NULL);
 
-    if (argument == -1)
-    {
+    if (argument == -1) {
       break;
     }
 
-    switch (argument)
-    {
+    switch (argument) {
     case 'i':
       queryPath = optarg;
       break;
@@ -176,16 +166,12 @@ int main(int argc, char *argv[])
   ASSERT(queryPath != NULL, "missing option -i (query file)");
   ASSERT(databasePath != NULL, "missing option -j (database file)");
 
-  if (forceCpu)
-  {
+  if (forceCpu) {
     cards = NULL;
     cardsLen = 0;
-  }
-  else
-  {
+  } else {
 
-    if (cardsLen == -1)
-    {
+    if (cardsLen == -1) {
       cudaGetCards(&cards, &cardsLen);
     }
 
@@ -195,6 +181,7 @@ int main(int argc, char *argv[])
   ASSERT(maxEValue > 0, "invalid evalue");
 
   ASSERT(threads >= 0, "invalid thread number");
+  loadQueues(cards, cardsLen);
   threadPoolInitialize(threads);
 
   Scorer *scorer;
@@ -204,8 +191,7 @@ int main(int argc, char *argv[])
   int queriesLen = 0;
   readFastaChains(&queries, &queriesLen, queryPath);
 
-  if (cache)
-  {
+  if (cache) {
     dumpFastaChains(databasePath);
   }
 
@@ -237,22 +223,17 @@ int main(int argc, char *argv[])
 
   double time = dwalltime();
 
-  while (1)
-  {
+  while (1) {
 
     int status = 1;
 
-    if (cardsLen == 0)
-    {
+    if (cardsLen == 0) {
 
       status &= readFastaChainsPart(&database, &databaseLen, handle, serialized,
                                     1000000000); // ~1GB
-    }
-    else
-    {
+    } else {
 
-      while (1)
-      {
+      while (1) {
 
         databaseLen = databaseEnd;
 
@@ -267,29 +248,24 @@ int main(int argc, char *argv[])
 
         if (cudaMemoryMin > cudaMemoryMax ||
             (status == 1 && databaseEnd > databaseStart &&
-             cudaMemoryMin > 500000000))
-        {
+             cudaMemoryMin > 500000000)) {
 
           int holder = databaseLen;
           databaseLen = databaseEnd;
           databaseEnd = holder;
 
-          if (databaseLen <= databaseStart)
-          {
+          if (databaseLen <= databaseStart) {
             ASSERT(0, "cannot read database into CUDA memory");
           }
 
           status = 1;
 
           break;
-        }
-        else
-        {
+        } else {
           databaseEnd = databaseLen;
         }
 
-        if (status == 0)
-        {
+        if (status == 0) {
           break;
         }
       }
@@ -306,13 +282,10 @@ int main(int argc, char *argv[])
                     valueFunction, (void *)eValueParams, maxEValue, NULL, 0,
                     cards, cardsLen, NULL);
 
-    if (dbAlignments == NULL)
-    {
+    if (dbAlignments == NULL) {
       dbAlignments = dbAlignmentsPart;
       dbAlignmentsLens = dbAlignmentsPartLens;
-    }
-    else
-    {
+    } else {
       dbAlignmentsMerge(dbAlignments, dbAlignmentsLens, dbAlignmentsPart,
                         dbAlignmentsPartLens, queriesLen, maxAlignments);
       deleteShotgunDatabase(dbAlignmentsPart, dbAlignmentsPartLens, queriesLen);
@@ -320,18 +293,15 @@ int main(int argc, char *argv[])
 
     chainDatabaseDelete(chainDatabase);
 
-    if (status == 0)
-    {
+    if (status == 0) {
       break;
     }
 
     // delete all unused chains
     char *usedMask = (char *)calloc(databaseLen, sizeof(char));
 
-    for (i = 0; i < queriesLen; ++i)
-    {
-      for (j = 0; j < dbAlignmentsLens[i]; ++j)
-      {
+    for (i = 0; i < queriesLen; ++i) {
+      for (j = 0; j < dbAlignmentsLens[i]; ++j) {
 
         DbAlignment *dbAlignment = dbAlignments[i][j];
         int targetIdx = dbAlignmentGetTargetIdx(dbAlignment);
@@ -340,10 +310,8 @@ int main(int argc, char *argv[])
       }
     }
 
-    for (i = 0; i < databaseLen; ++i)
-    {
-      if (!usedMask[i] && database[i] != NULL)
-      {
+    for (i = 0; i < databaseLen; ++i) {
+      if (!usedMask[i] && database[i] != NULL) {
         chainDelete(database[i]);
         database[i] = NULL;
       }
@@ -371,7 +339,8 @@ int main(int argc, char *argv[])
   //     file, "SW#N;%s;%s;%d;%d;%d;%d;%d,%lf;%lf\n", queryPath, databasePath,
   //     gapOpen, gapExtend, cardsLen, chainGetLength(query),
   //     chainGetLength(target), time,
-  //     ((long int)(chainGetLength(query)) * (long int)(chainGetLength(target))) /
+  //     ((long int)(chainGetLength(query)) * (long
+  //     int)(chainGetLength(target))) /
   //         (time * 1000000000));
 
   printf("TIME: %lf\n", time);
@@ -395,27 +364,22 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-static void getCudaCards(int **cards, int *cardsLen, char *optarg)
-{
+static void getCudaCards(int **cards, int *cardsLen, char *optarg) {
 
   *cardsLen = strlen(optarg);
   *cards = (int *)malloc(*cardsLen * sizeof(int));
 
   int i;
-  for (i = 0; i < *cardsLen; ++i)
-  {
+  for (i = 0; i < *cardsLen; ++i) {
     (*cards)[i] = optarg[i] - '0';
   }
 }
 
-static int getOutFormat(char *optarg)
-{
+static int getOutFormat(char *optarg) {
 
   int i;
-  for (i = 0; i < CHAR_INT_LEN(outFormats); ++i)
-  {
-    if (strcmp(outFormats[i].format, optarg) == 0)
-    {
+  for (i = 0; i < CHAR_INT_LEN(outFormats); ++i) {
+    if (strcmp(outFormats[i].format, optarg) == 0) {
       return outFormats[i].code;
     }
   }
@@ -423,14 +387,11 @@ static int getOutFormat(char *optarg)
   ASSERT(0, "unknown out format %s", optarg);
 }
 
-static int getAlgorithm(char *optarg)
-{
+static int getAlgorithm(char *optarg) {
 
   int i;
-  for (i = 0; i < CHAR_INT_LEN(algorithms); ++i)
-  {
-    if (strcmp(algorithms[i].format, optarg) == 0)
-    {
+  for (i = 0; i < CHAR_INT_LEN(algorithms); ++i) {
+    if (strcmp(algorithms[i].format, optarg) == 0) {
       return algorithms[i].code;
     }
   }
@@ -440,16 +401,14 @@ static int getAlgorithm(char *optarg)
 
 static void valueFunction(double *values, int *scores, Chain *query,
                           Chain **database, int databaseLen, int *cards,
-                          int cardsLen, void *param_)
-{
+                          int cardsLen, void *param_) {
 
   EValueParams *eValueParams = (EValueParams *)param_;
   eValues(values, scores, query, database, databaseLen, cards, cardsLen,
           eValueParams);
 }
 
-static void help()
-{
+static void help() {
   printf(
       "usage: swsharpdb -i <query db file> -j <target db file> [arguments "
       "...]\n"

@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Contact SW# author by mkorpar@gmail.com.
 
-Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.unlp.edu.ar
+Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar,
+erucci@lidi.info.unlp.edu.ar
 */
 
 #include <CL/sycl.hpp>
@@ -35,126 +36,115 @@ namespace sycl = cl::sycl;
 #include "utils.h"
 
 #include "cuda_utils.h"
+std::unordered_map<int, sycl::queue> queues;
 
-extern void
-cudaGetCards(int **cards, int *cardsLen)
-{
+extern void cudaGetCards(int **cards, int *cardsLen) {
 
 #ifdef SYCL_LANGUAGE_VERSION
-    *cardsLen = sycl::device::get_devices().size();
+  *cardsLen = sycl::device::get_devices().size();
 
-    *cards = (int *)malloc(*cardsLen * sizeof(int));
+  *cards = (int *)malloc(*cardsLen * sizeof(int));
 
-    for (int i = 0; i < *cardsLen; ++i)
-    {
-        (*cards)[i] = i;
-    }
+  for (int i = 0; i < *cardsLen; ++i) {
+    (*cards)[i] = i;
+  }
 #else
-    *cards = NULL;
-    *cardsLen = 0;
+  *cards = NULL;
+  *cardsLen = 0;
 #endif
 }
 
-extern int cudaCheckCards(int *cards, int cardsLen)
-{
+extern int cudaCheckCards(int *cards, int cardsLen) {
 
 #ifdef SYCL_LANGUAGE_VERSION
-    int maxDeviceId;
-    maxDeviceId = sycl::device::get_devices().size();
+  int maxDeviceId;
+  maxDeviceId = sycl::device::get_devices().size();
 
-    for (int i = 0; i < cardsLen; ++i)
-    {
-        if (cards[i] >= maxDeviceId)
-        {
-            return 0;
-        }
+  for (int i = 0; i < cardsLen; ++i) {
+    if (cards[i] >= maxDeviceId) {
+      return 0;
     }
+  }
 
-    return 1;
+  return 1;
 #else
-    return cardsLen == 0;
+  return cardsLen == 0;
 #endif
 }
 
-extern size_t cudaMinimalGlobalMemory(int *cards, int cardsLen)
-{
+extern void loadQueues(int *cards, int cardsLen) {
+  auto devices = sycl::device::get_devices();
+  for (int i = 0; i < cardsLen; ++i) {
+    queues[cards[i]] = sycl::queue(devices[cards[i]]);
+  }
+}
+
+extern size_t cudaMinimalGlobalMemory(int *cards, int cardsLen) {
 
 #ifdef SYCL_LANGUAGE_VERSION
 
-    if (cards == NULL || cardsLen == 0)
-    {
-        return 0;
-    }
-
-    size_t minMem = (size_t)-1;
-    for (int i = 0; i < cardsLen; ++i)
-    {
-        auto device = sycl::device::get_devices()[cards[i]];
-
-        minMem = MIN(minMem, device.get_info<sycl::info::device::global_mem_size>());
-    }
-
-    return minMem;
-#else
+  if (cards == NULL || cardsLen == 0) {
     return 0;
+  }
+
+  size_t minMem = (size_t)-1;
+  for (int i = 0; i < cardsLen; ++i) {
+    auto device = sycl::device::get_devices()[cards[i]];
+
+    minMem =
+        MIN(minMem, device.get_info<sycl::info::device::global_mem_size>());
+  }
+
+  return minMem;
+#else
+  return 0;
 #endif
 }
 
-extern void maxWorkGroups(int card, int defaultBlocks, int defaultThreads, int cols, int *blocks, int *threads)
-{
-    auto device = sycl::device::get_devices()[card];
-    *blocks = device.get_info<sycl::info::device::max_compute_units>();
-    *threads = device.is_cpu() ? 1024 : device.get_info<sycl::info::device::max_work_group_size>();
+extern void maxWorkGroups(int card, int defaultBlocks, int defaultThreads,
+                          int cols, int *blocks, int *threads) {
+  auto device = sycl::device::get_devices()[card];
+  *blocks = device.get_info<sycl::info::device::max_compute_units>();
+  *threads = device.is_cpu()
+                 ? 1024
+                 : device.get_info<sycl::info::device::max_work_group_size>();
 
-    if (cols)
-    {
+  if (cols) {
 
-        if (getenv("MAX_THREADS"))
-        {
-            *blocks = defaultBlocks;
-            if (strcmp(getenv("MAX_THREADS"), "ORIGINAL") == 0)
-                *threads = defaultThreads;
-            else
-                *threads = atoi(getenv("MAX_THREADS"));
-            ASSERT(*threads * 2 <= cols, "too short gpu target chain");
+    if (getenv("MAX_THREADS")) {
+      *blocks = defaultBlocks;
+      if (strcmp(getenv("MAX_THREADS"), "ORIGINAL") == 0)
+        *threads = defaultThreads;
+      else
+        *threads = atoi(getenv("MAX_THREADS"));
+      ASSERT(*threads * 2 <= cols, "too short gpu target chain");
 
-            if (*threads * *blocks * 2 > cols)
-            {
-                *blocks = (int)(cols / (*threads * 2.));
-                *blocks = *blocks <= 30 ? *blocks : *blocks - (*blocks % 30);
-            }
+      if (*threads * *blocks * 2 > cols) {
+        *blocks = (int)(cols / (*threads * 2.));
+        *blocks = *blocks <= 30 ? *blocks : *blocks - (*blocks % 30);
+      }
+    } else {
+      if (device.is_cpu()) {
+        if (*threads * *blocks * 2 > cols) {
+          *threads = sycl::max((int)(cols / (*blocks * 2.)), 1);
         }
-        else
-        {
-            if (device.is_cpu())
-            {
-                if (*threads * *blocks * 2 > cols)
-                {
-                    *threads = sycl::max((int)(cols / (*blocks * 2.)), 1);
-                }
-            }
-            else
-            {
-                *blocks = defaultBlocks;
-                if (*threads * *blocks * 2 > cols)
-                {
-                    *blocks = sycl::max((int)(cols / (*threads * 2.)), 1);
-                }
-            }
+      } else {
+        *blocks = defaultBlocks;
+        if (*threads * *blocks * 2 > cols) {
+          *blocks = sycl::max((int)(cols / (*threads * 2.)), 1);
         }
+      }
     }
-    else
-    {
-        if (getenv("MAX_THREADS"))
-        {
-            *blocks = defaultBlocks;
-            if (strcmp(getenv("MAX_THREADS"), "ORIGINAL") == 0)
-                *threads = defaultThreads;
-            else
-                *threads = atoi(getenv("MAX_THREADS"));
-        }
+  } else {
+    if (getenv("MAX_THREADS")) {
+      *blocks = defaultBlocks;
+      if (strcmp(getenv("MAX_THREADS"), "ORIGINAL") == 0)
+        *threads = defaultThreads;
+      else
+        *threads = atoi(getenv("MAX_THREADS"));
     }
+  }
 
-    // printf("%s\n", device.get_info<sycl::info::device::name>().c_str());
-    // printf("%d %d\n", *threads, *blocks);
+  printf("%s\n", device.get_info<sycl::info::device::name>().c_str());
+  printf("%d %d\n", *threads, *blocks);
 }

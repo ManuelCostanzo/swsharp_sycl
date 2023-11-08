@@ -19,13 +19,12 @@ ifeq ($(BACK), amd)
 	LD = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
 endif
 
-
-
-ifeq ($(BACK), hip)
-	CP = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
-	CU = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
-	LD = syclcc --hipsycl-targets="omp;cuda:sm_75" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
+ifeq ($(BACK), acpp)
+	CP = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
+	CU = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
+	LD = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
 endif
+
 
 DX = doxygen
 

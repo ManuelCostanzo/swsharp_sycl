@@ -27,7 +27,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Contact SW# author by mkorpar@gmail.com.
 
-Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.unlp.edu.ar
+Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar,
+erucci@lidi.info.unlp.edu.ar
 */
 /**
 @file
@@ -39,73 +40,73 @@ Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.un
 #define __SW_SHARP_CUDA_UTILSH__
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-#define CUDA_SAFE_CALL(call) \
-  do                         \
-  {                          \
-    int err = call;          \
-                             \
+#define CUDA_SAFE_CALL(call)                                                   \
+  do {                                                                         \
+    int err = call;                                                            \
+                                                                               \
   } while (0)
 
 #define MAX3(x, y, w) sycl::max(x, sycl::max(y, w))
 #define MAX4(x, y, w, z) sycl::max(sycl::max(x, y), sycl::max(w, z))
 
-#define VEC2_ASSIGN(X, Y) \
-  do                      \
-  {                       \
-    (X).x() = (Y).x();    \
-    (X).y() = (Y).y();    \
+#define VEC2_ASSIGN(X, Y)                                                      \
+  do {                                                                         \
+    (X).x() = (Y).x();                                                         \
+    (X).y() = (Y).y();                                                         \
   } while (0)
 
-#define VEC3_ASSIGN(X, Y) \
-  do                      \
-  {                       \
-    (X).x() = (Y).x();    \
-    (X).y() = (Y).y();    \
-    (X).z() = (Y).z();    \
+#define VEC3_ASSIGN(X, Y)                                                      \
+  do {                                                                         \
+    (X).x() = (Y).x();                                                         \
+    (X).y() = (Y).y();                                                         \
+    (X).z() = (Y).z();                                                         \
   } while (0)
 
-#define VEC4_ASSIGN(X, Y) \
-  do                      \
-  {                       \
-    (X).x() = (Y).x();    \
-    (X).y() = (Y).y();    \
-    (X).z() = (Y).z();    \
-    (X).w() = (Y).w();    \
+#define VEC4_ASSIGN(X, Y)                                                      \
+  do {                                                                         \
+    (X).x() = (Y).x();                                                         \
+    (X).y() = (Y).y();                                                         \
+    (X).z() = (Y).z();                                                         \
+    (X).w() = (Y).w();                                                         \
   } while (0)
 
-  /*!
-  @brief Gets CUDA card index list.
+extern std::unordered_map<int, sycl::queue> queues;
 
-  @param cards output CUDA cards index array
-  @param cardsLen output CUDA cards index array length
-  */
-  extern void cudaGetCards(int **cards, int *cardsLen);
+/*!
+@brief Gets CUDA card index list.
 
-  /*!
-  @brief Checks CUDA card index list.
+@param cards output CUDA cards index array
+@param cardsLen output CUDA cards index array length
+*/
+extern void cudaGetCards(int **cards, int *cardsLen);
 
-  @param cards CUDA cards index array
-  @param cardsLen CUDA cards index array length
+/*!
+@brief Checks CUDA card index list.
 
-  @return 1 if all input card indices are available, 0 otherwise
-  */
-  extern int cudaCheckCards(int *cards, int cardsLen);
+@param cards CUDA cards index array
+@param cardsLen CUDA cards index array length
 
-  /*!
-  @brief Get minimal available CUDA global memory
+@return 1 if all input card indices are available, 0 otherwise
+*/
+extern int cudaCheckCards(int *cards, int cardsLen);
 
-  @param cards CUDA cards index array
-  @param cardsLen CUDA cards index array length
+extern void loadQueues(int *cards, int cardsLen);
 
-  @return global memory size of CUDA card with least memory
-  */
-  extern size_t cudaMinimalGlobalMemory(int *cards, int cardsLen);
+/*!
+@brief Get minimal available CUDA global memory
 
-  extern void maxWorkGroups(int card, int defaultBlocks, int defaultThreads, int cols, int *blocks, int *threads);
+@param cards CUDA cards index array
+@param cardsLen CUDA cards index array length
+
+@return global memory size of CUDA card with least memory
+*/
+extern size_t cudaMinimalGlobalMemory(int *cards, int cardsLen);
+
+extern void maxWorkGroups(int card, int defaultBlocks, int defaultThreads,
+                          int cols, int *blocks, int *threads);
 
 #ifdef __cplusplus
 }
