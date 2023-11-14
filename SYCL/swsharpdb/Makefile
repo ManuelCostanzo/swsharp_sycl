@@ -1,9 +1,9 @@
 CC = g++ -O3 -march=native
 
 ifeq ($(BACK), icpx)
-	CP = icpx -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
-	CU = icpx -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
-	LD = icpx -fsycl -fsycl-unnamed-lambda -O3 ../lib/libswsharp.a
+	CP = icpx -fsycl -fsycl-unnamed-lambda -O3 -fsycl-targets=spir64_x86_64 ../lib/libswsharp.a -march=native
+	CU = icpx -fsycl -fsycl-unnamed-lambda -O3 -fsycl-targets=spir64_x86_64 ../lib/libswsharp.a -march=native
+	LD = icpx -fsycl -fsycl-unnamed-lambda -O3 -fsycl-targets=spir64_x86_64 ../lib/libswsharp.a -match=native
 endif
 
 

@@ -828,7 +828,7 @@ static void deleteDatabase(ShortDatabase *database) try {
 
     GpuDatabase *gpuDatabase = &(database->gpuDatabases[i]);
 
-    sycl::queue dev_q = queues[card];
+    sycl::queue dev_q = queues[gpuDatabase->card];
 
     sycl::free(gpuDatabase->offsets, dev_q);
     sycl::free(gpuDatabase->lengths, dev_q);

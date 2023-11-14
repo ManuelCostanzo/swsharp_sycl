@@ -1468,7 +1468,6 @@ void ovSolveSingle(int id, char *codes, int *starts, int *lengths, int *scores,
   Atom atom;
   atom.mch = 0;
   atom.lScr = INT4_ZERO;
-  ;
   atom.lAff = INT4_SCORE_MIN;
 
   hBusScrShr[localId] = 0;
@@ -1565,7 +1564,6 @@ void ovSolveSingle(int id, char *codes, int *starts, int *lengths, int *scores,
 
       atom.mch = 0;
       atom.lScr = INT4_ZERO;
-      ;
       atom.lAff = INT4_SCORE_MIN;
     }
 
@@ -1609,7 +1607,7 @@ void swSolveSingle(int id, char *codes, int *starts, int *lengths, int *scores,
   Atom atom;
   atom.mch = 0;
   atom.lScr = INT4_ZERO;
-  ;
+
   atom.lAff = INT4_SCORE_MIN;
 
   hBusScrShr[localId] = 0;
@@ -1695,7 +1693,6 @@ void swSolveSingle(int id, char *codes, int *starts, int *lengths, int *scores,
 
       atom.mch = 0;
       atom.lScr = INT4_ZERO;
-      ;
       atom.lAff = INT4_SCORE_MIN;
     }
 

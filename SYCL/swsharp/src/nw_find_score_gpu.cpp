@@ -219,170 +219,191 @@ solveShortDelegated(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
 
   int row = (d + groupId - groupRangeId + 1) * (localRangeId * 4) + localId * 4;
   int col = cellWidth_ * (groupRangeId - groupId - 1) - localId;
+  bool doWork = true;
 
   if (row < 0)
-    return;
-
-  row -= (col < 0) * (groupRangeId * localRangeId * 4);
-  col += (col < 0) * cols_;
-
-  int x1 = cellWidth_ * (groupRangeId - groupId - 1) + localRangeId;
-  int y1 = (d + groupId - groupRangeId + 1) * (localRangeId * 4);
-
-  int x2 = cellWidth_ * (groupRangeId - groupId - 1) - localRangeId;
-  int y2 = (d + groupId - groupRangeId + 2) * (localRangeId * 4);
-
-  y2 -= (x2 < 0) * (groupRangeId * localRangeId * 4);
-  x2 += (x2 < 0) * cols_;
-
-  if (y1 - x1 > pLeft_ && (x2 - y2 > pRight_ || y2 < 0)) {
-
-    row += (col != 0) * groupRangeId * localRangeId * 4;
-    vBus.mch[(row >> 2) % (groupRangeId * localRangeId)] = SCORE_MIN;
-    vBus.scr[(row >> 2) % (groupRangeId * localRangeId)] = SCORE4_MIN;
-    vBus.aff[(row >> 2) % (groupRangeId * localRangeId)] = SCORE4_MIN;
-
-    hBus[col] = sycl::int2(SCORE_MIN, SCORE_MIN);
-
-    return;
-  }
+    doWork = false;
 
   Atom atom;
-
-  if (0 <= row && row < rows_ && col > 0) {
-    atom.mch = vBus.mch[(row >> 2) % (groupRangeId * localRangeId)];
-    atom.lScr = vBus.scr[(row >> 2) % (groupRangeId * localRangeId)];
-    atom.lAff = vBus.aff[(row >> 2) % (groupRangeId * localRangeId)];
-  } else {
-    atom.mch = gap(row - 1, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_) *
-               (row != 0);
-    atom.lScr = sycl::int4(
-        gap(row, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
-        gap(row + 1, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
-        gap(row + 2, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
-        gap(row + 3, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_));
-    atom.lAff = SCORE4_MIN;
-  }
-
-  hBusScrShr[localId] = hBus[col].x();
-  hBusAffShr[localId] = hBus[col].y();
-
   sycl::char4 rowCodes;
 
-  if (0 <= row && row < rows_)
-    rowCodes = rowGpu[row >> 2];
+  if (doWork) {
+    row -= (col < 0) * (groupRangeId * localRangeId * 4);
+    col += (col < 0) * cols_;
+
+    int x1 = cellWidth_ * (groupRangeId - groupId - 1) + localRangeId;
+    int y1 = (d + groupId - groupRangeId + 1) * (localRangeId * 4);
+
+    int x2 = cellWidth_ * (groupRangeId - groupId - 1) - localRangeId;
+    int y2 = (d + groupId - groupRangeId + 2) * (localRangeId * 4);
+
+    y2 -= (x2 < 0) * (groupRangeId * localRangeId * 4);
+    x2 += (x2 < 0) * cols_;
+
+    if (y1 - x1 > pLeft_ && (x2 - y2 > pRight_ || y2 < 0)) {
+
+      row += (col != 0) * groupRangeId * localRangeId * 4;
+      vBus.mch[(row >> 2) % (groupRangeId * localRangeId)] = SCORE_MIN;
+      vBus.scr[(row >> 2) % (groupRangeId * localRangeId)] = SCORE4_MIN;
+      vBus.aff[(row >> 2) % (groupRangeId * localRangeId)] = SCORE4_MIN;
+
+      hBus[col] = sycl::int2(SCORE_MIN, SCORE_MIN);
+
+      doWork = false;
+    }
+
+    if (doWork) {
+      if (0 <= row && row < rows_ && col > 0) {
+        atom.mch = vBus.mch[(row >> 2) % (groupRangeId * localRangeId)];
+        atom.lScr = vBus.scr[(row >> 2) % (groupRangeId * localRangeId)];
+        atom.lAff = vBus.aff[(row >> 2) % (groupRangeId * localRangeId)];
+      } else {
+        atom.mch =
+            gap(row - 1, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_) *
+            (row != 0);
+        atom.lScr = sycl::int4(
+            gap(row, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
+            gap(row + 1, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
+            gap(row + 2, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
+            gap(row + 3, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_));
+        atom.lAff = SCORE4_MIN;
+      }
+
+      hBusScrShr[localId] = hBus[col].x();
+      hBusAffShr[localId] = hBus[col].y();
+
+      rowCodes = rowGpu[row >> 2];
+    }
+  }
 
   int del;
 
   for (int i = 0; i < localRangeId; ++i) {
 
-    if (0 <= row && row < rows_) {
+    if (doWork) {
 
-      char columnCode = colGpu[col];
+      if (0 <= row && row < rows_) {
 
-      if (localId == 0) {
-        atom.up = hBus[col];
-      } else {
-        atom.up.x() = hBusScrShr[localId];
-        atom.up.y() = hBusAffShr[localId];
+        char columnCode = colGpu[col];
+
+        if (localId == 0) {
+          atom.up = hBus[col];
+        } else {
+          atom.up.x() = hBusScrShr[localId];
+          atom.up.y() = hBusAffShr[localId];
+        }
+
+        del = sycl::max((atom.up.x() - gapOpen_), (atom.up.y() - gapExtend_));
+        int ins =
+            sycl::max((atom.lScr.x() - gapOpen_), (atom.lAff.x() - gapExtend_));
+
+        int mch = atom.mch + sub(columnCode, rowCodes.x(), scorerLen_, match_,
+                                 mismatch_, subLen_, subGpu);
+
+        atom.rScr.x() = MAX3(mch, del, ins);
+        atom.rAff.x() = ins;
+
+        del = sycl::max((atom.rScr.x() - gapOpen_), (del - gapExtend_));
+        ins =
+            sycl::max((atom.lScr.y() - gapOpen_), (atom.lAff.y() - gapExtend_));
+
+        mch = atom.lScr.x() + sub(columnCode, rowCodes.y(), scorerLen_, match_,
+                                  mismatch_, subLen_, subGpu);
+
+        atom.rScr.y() = MAX3(mch, del, ins);
+        atom.rAff.y() = ins;
+
+        del = sycl::max((atom.rScr.y() - gapOpen_), (del - gapExtend_));
+        ins =
+            sycl::max((atom.lScr.z() - gapOpen_), (atom.lAff.z() - gapExtend_));
+
+        mch = atom.lScr.y() + sub(columnCode, rowCodes.z(), scorerLen_, match_,
+                                  mismatch_, subLen_, subGpu);
+
+        atom.rScr.z() = MAX3(mch, del, ins);
+        atom.rAff.z() = ins;
+
+        del = sycl::max((atom.rScr.z() - gapOpen_), (del - gapExtend_));
+        ins =
+            sycl::max((atom.lScr.w() - gapOpen_), (atom.lAff.w() - gapExtend_));
+
+        mch = atom.lScr.z() + sub(columnCode, rowCodes.w(), scorerLen_, match_,
+                                  mismatch_, subLen_, subGpu);
+
+        atom.rScr.w() = MAX3(mch, del, ins);
+        atom.rAff.w() = ins;
+
+        if (atom.rScr.x() == score_) {
+          res_->x() = row;
+          res_->y() = col;
+        } else if (atom.rScr.y() == score_) {
+          res_->x() = row + 1;
+          res_->y() = col;
+        } else if (atom.rScr.z() == score_) {
+          res_->x() = row + 2;
+          res_->y() = col;
+        } else if (atom.rScr.w() == score_) {
+          res_->x() = row + 3;
+          res_->y() = col;
+        }
+
+        atom.mch = atom.up.x();
+        atom.lScr = atom.rScr;
+        atom.lAff = atom.rAff;
       }
-
-      del = sycl::max((atom.up.x() - gapOpen_), (atom.up.y() - gapExtend_));
-      int ins =
-          sycl::max((atom.lScr.x() - gapOpen_), (atom.lAff.x() - gapExtend_));
-
-      int mch = atom.mch + sub(columnCode, rowCodes.x(), scorerLen_, match_,
-                               mismatch_, subLen_, subGpu);
-
-      atom.rScr.x() = MAX3(mch, del, ins);
-      atom.rAff.x() = ins;
-
-      del = sycl::max((atom.rScr.x() - gapOpen_), (del - gapExtend_));
-      ins = sycl::max((atom.lScr.y() - gapOpen_), (atom.lAff.y() - gapExtend_));
-
-      mch = atom.lScr.x() + sub(columnCode, rowCodes.y(), scorerLen_, match_,
-                                mismatch_, subLen_, subGpu);
-
-      atom.rScr.y() = MAX3(mch, del, ins);
-      atom.rAff.y() = ins;
-
-      del = sycl::max((atom.rScr.y() - gapOpen_), (del - gapExtend_));
-      ins = sycl::max((atom.lScr.z() - gapOpen_), (atom.lAff.z() - gapExtend_));
-
-      mch = atom.lScr.y() + sub(columnCode, rowCodes.z(), scorerLen_, match_,
-                                mismatch_, subLen_, subGpu);
-
-      atom.rScr.z() = MAX3(mch, del, ins);
-      atom.rAff.z() = ins;
-
-      del = sycl::max((atom.rScr.z() - gapOpen_), (del - gapExtend_));
-      ins = sycl::max((atom.lScr.w() - gapOpen_), (atom.lAff.w() - gapExtend_));
-
-      mch = atom.lScr.z() + sub(columnCode, rowCodes.w(), scorerLen_, match_,
-                                mismatch_, subLen_, subGpu);
-
-      atom.rScr.w() = MAX3(mch, del, ins);
-      atom.rAff.w() = ins;
-
-      if (atom.rScr.x() == score_) {
-        res_->x() = row;
-        res_->y() = col;
-      } else if (atom.rScr.y() == score_) {
-        res_->x() = row + 1;
-        res_->y() = col;
-      } else if (atom.rScr.z() == score_) {
-        res_->x() = row + 2;
-        res_->y() = col;
-      } else if (atom.rScr.w() == score_) {
-        res_->x() = row + 3;
-        res_->y() = col;
-      }
-
-      atom.mch = atom.up.x();
-      VEC4_ASSIGN(atom.lScr, atom.rScr);
-      VEC4_ASSIGN(atom.lAff, atom.rAff);
     }
+
+    int a = atom.rScr.w();
+    int b = del;
 
     item_ct1.barrier(sycl::access::fence_space::local_space);
 
-    if (0 <= row && row < rows_) {
+    if (doWork) {
+      if (0 <= row && row < rows_) {
 
-      if (localId == localRangeId - 1 || i == localRangeId - 1) {
-        hBus[col] = sycl::int2(atom.rScr.w(), del);
-      } else {
-        hBusScrShr[localId + 1] = atom.rScr.w();
-        hBusAffShr[localId + 1] = del;
+        if (localId == localRangeId - 1 || i == localRangeId - 1) {
+          hBus[col] = sycl::int2(a, b);
+        } else {
+          hBusScrShr[localId + 1] = a;
+          hBusAffShr[localId + 1] = b;
+        }
       }
-    }
 
-    ++col;
+      ++col;
 
-    if (col == cols_) {
+      if (col == cols_) {
 
-      col = 0;
-      row = row + groupRangeId * localRangeId * 4;
+        col = 0;
+        row = row + groupRangeId * localRangeId * 4;
 
-      atom.mch = gap(row - 1, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_) *
-                 (row != 0);
-      atom.lScr = sycl::int4(
-          gap(row, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
-          gap(row + 1, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
-          gap(row + 2, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
-          gap(row + 3, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_));
-      atom.lAff = SCORE4_MIN;
+        atom.mch =
+            gap(row - 1, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_) *
+            (row != 0);
+        atom.lScr = sycl::int4(
+            gap(row, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
+            gap(row + 1, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
+            gap(row + 2, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_),
+            gap(row + 3, queryFrontGap_, gapOpen_, gapExtend_, gapDiff_));
+        atom.lAff = SCORE4_MIN;
 
-      rowCodes = rowGpu[row >> 2];
+        rowCodes = rowGpu[row >> 2];
+      }
     }
 
     item_ct1.barrier(sycl::access::fence_space::local_space);
   }
 
-  if (row < 0 || row >= rows_)
-    return;
+  if (doWork) {
 
-  vBus.mch[(row >> 2) % (groupRangeId * localRangeId)] = atom.up.x();
-  vBus.scr[(row >> 2) % (groupRangeId * localRangeId)] = atom.lScr;
-  vBus.aff[(row >> 2) % (groupRangeId * localRangeId)] = atom.lAff;
+    if (row < 0 || row >= rows_)
+      doWork = false;
+
+    if (doWork) {
+      vBus.mch[(row >> 2) % (groupRangeId * localRangeId)] = atom.up.x();
+      vBus.scr[(row >> 2) % (groupRangeId * localRangeId)] = atom.lScr;
+      vBus.aff[(row >> 2) % (groupRangeId * localRangeId)] = atom.lAff;
+    }
+  }
 }
 
 template <class Sub>
@@ -402,11 +423,11 @@ solveShortNormal(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
   int row = (d + groupId - groupRangeId + 1) * (localRangeId * 4) + localId * 4;
   int col = cellWidth_ * (groupRangeId - groupId - 1) - localId;
 
-  bool valid = true;
+  bool doWork = true;
   if (row < 0 || row >= rows_)
-    valid = false;
+    doWork = false;
 
-  if (valid) {
+  if (doWork) {
     int x1 = cellWidth_ * (groupRangeId - groupId - 1) + localRangeId;
     int y1 = (d + groupId - groupRangeId + 1) * (localRangeId * 4);
 
@@ -417,10 +438,10 @@ solveShortNormal(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
       vBus.scr[(row >> 2) % (groupRangeId * localRangeId)] = SCORE4_MIN;
       vBus.aff[(row >> 2) % (groupRangeId * localRangeId)] = SCORE4_MIN;
 
-      valid = false;
+      doWork = false;
     }
 
-    if (valid) {
+    if (doWork) {
       int x2 = cellWidth_ * (groupRangeId - groupId - 1) - localRangeId;
       int y2 = (d + groupId - groupRangeId + 2) * (localRangeId * 4);
 
@@ -435,16 +456,15 @@ solveShortNormal(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
         hBus[col] = sycl::int2(SCORE_MIN, SCORE_MIN);
         hBus[col + localRangeId] = sycl::int2(SCORE_MIN, SCORE_MIN);
 
-        valid = false;
+        doWork = false;
       }
     }
   }
 
   Atom atom;
   sycl::char4 rowCodes;
-  int del;
 
-  if (valid) {
+  if (doWork) {
     atom.mch = vBus.mch[(row >> 2) % (groupRangeId * localRangeId)];
     atom.lScr = vBus.scr[(row >> 2) % (groupRangeId * localRangeId)];
     atom.lAff = vBus.aff[(row >> 2) % (groupRangeId * localRangeId)];
@@ -455,9 +475,12 @@ solveShortNormal(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
     rowCodes = rowGpu[row >> 2];
   }
 
+  int del;
+  int a;
+
   for (int i = 0; i < localRangeId; ++i, ++col) {
 
-    if (valid) {
+    if (doWork) {
       char columnCode = colGpu[col];
 
       if (localId == 0) {
@@ -519,26 +542,33 @@ solveShortNormal(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
       }
 
       atom.mch = atom.up.x();
-      VEC4_ASSIGN(atom.lScr, atom.rScr);
-      VEC4_ASSIGN(atom.lAff, atom.rAff);
+      atom.lScr = atom.rScr;
+      atom.lAff = atom.rAff;
     }
+
+    a = atom.rScr.w();
+    int b = del;
 
     item_ct1.barrier(sycl::access::fence_space::local_space);
 
-    if (valid) {
+    if (doWork) {
       if (localId == localRangeId - 1) {
-        hBus[col] = sycl::int2(atom.rScr.w(), del);
+        hBus[col] = sycl::int2(a, b);
       } else {
-        hBusScrShr[localId + 1] = atom.rScr.w();
-        hBusAffShr[localId + 1] = del;
+        hBusScrShr[localId + 1] = a;
+        hBusAffShr[localId + 1] = b;
       }
     }
 
     item_ct1.barrier(sycl::access::fence_space::local_space);
   }
 
-  if (valid) {
-    hBus[col - 1] = sycl::int2(atom.rScr.w(), del);
+  int c = a;
+  int dd = del;
+
+  if (doWork) {
+
+    hBus[col - 1] = sycl::int2(c, dd);
 
     const int vBusIdx = (row >> 2) % (groupRangeId * localRangeId);
     vBus.mch[vBusIdx] = atom.up.x();
@@ -588,12 +618,12 @@ solveLong(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
   int row = (d + groupId - groupRangeId + 1) * (localRangeId * 4) + localId * 4;
   int col = cellWidth_ * (groupRangeId - groupId - 1) - localId + localRangeId;
 
-  bool valid = true;
+  bool doWork = true;
 
   if (row < 0 || row >= rows_)
-    valid = false;
+    doWork = false;
 
-  if (valid) {
+  if (doWork) {
     int x1 = cellWidth_ * (groupRangeId - groupId - 1) + cellWidth_;
     int y1 = (d + groupId - groupRangeId + 1) * (localRangeId * 4);
 
@@ -603,10 +633,10 @@ solveLong(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
       vBus.scr[(row >> 2) % (groupRangeId * localRangeId)] = SCORE4_MIN;
       vBus.aff[(row >> 2) % (groupRangeId * localRangeId)] = SCORE4_MIN;
 
-      valid = false;
+      doWork = false;
     }
 
-    if (valid) {
+    if (doWork) {
       int x2 = cellWidth_ * (groupRangeId - groupId - 1);
       int y2 = (d + groupId - groupRangeId + 2) * (localRangeId * 4);
 
@@ -619,7 +649,7 @@ solveLong(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
         for (int i = 0; i < cellWidth_ - localRangeId; i += localRangeId) {
           hBus[col + i] = sycl::int2(SCORE_MIN, SCORE_MIN);
         }
-        valid = false;
+        doWork = false;
       }
     }
   }
@@ -627,8 +657,9 @@ solveLong(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
   Atom atom;
   sycl::char4 rowCodes;
   int del;
+  int a;
 
-  if (valid) {
+  if (doWork) {
     atom.mch = vBus.mch[(row >> 2) % (groupRangeId * localRangeId)];
     atom.lScr = vBus.scr[(row >> 2) % (groupRangeId * localRangeId)];
     atom.lAff = vBus.aff[(row >> 2) % (groupRangeId * localRangeId)];
@@ -641,7 +672,7 @@ solveLong(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
 
   for (int i = 0; i < cellWidth_ - localRangeId; ++i, ++col) {
 
-    if (valid) {
+    if (doWork) {
       char columnCode = colGpu[col];
 
       if (localId == 0) {
@@ -703,26 +734,33 @@ solveLong(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
       }
 
       atom.mch = atom.up.x();
-      VEC4_ASSIGN(atom.lScr, atom.rScr);
-      VEC4_ASSIGN(atom.lAff, atom.rAff);
+      atom.lScr = atom.rScr;
+      atom.lAff = atom.rAff;
     }
+
+    a = atom.rScr.w();
+    int b = del;
 
     item_ct1.barrier(sycl::access::fence_space::local_space);
 
-    if (valid) {
+    if (doWork) {
       if (localId == localRangeId - 1) {
-        hBus[col] = sycl::int2(atom.rScr.w(), del);
+        hBus[col] = sycl::int2(a, b);
       } else {
-        hBusScrShr[localId + 1] = atom.rScr.w();
-        hBusAffShr[localId + 1] = del;
+        hBusScrShr[localId + 1] = a;
+        hBusAffShr[localId + 1] = b;
       }
     }
 
     item_ct1.barrier(sycl::access::fence_space::local_space);
   }
 
-  if (valid) {
-    hBus[col - 1] = sycl::int2(atom.rScr.w(), del);
+  int c = a;
+  int dd = del;
+
+  if (doWork) {
+
+    hBus[col - 1] = sycl::int2(c, dd);
 
     const int vBusIdx = (row >> 2) % (groupRangeId * localRangeId);
     vBus.mch[vBusIdx] = atom.up.x();
@@ -882,12 +920,6 @@ static void *nwFindScoreGpuKernel(void *params) try {
   sycl::int2 *res = malloc_shared<sycl::int2>(1, dev_q);
   *res = {-1, -1};
 
-  int *ga = sycl::malloc_shared<int>(1, dev_q);
-  int *ge = sycl::malloc_shared<int>(1, dev_q);
-
-  *ga = gapOpen;
-  *ge = gapExtend;
-
   for (int diagonal = 0; diagonal < diagonals; ++diagonal) {
 
     if (scalar) {
@@ -902,17 +934,17 @@ static void *nwFindScoreGpuKernel(void *params) try {
                              sycl::access::target::local>
                   hBusAffShr_acc_ct1(sycl::range<1>(threads), cgh);
 
-              cgh.parallel_for(sycl::nd_range<1>(blocks * threads, threads),
-                               [=](sycl::nd_item<1> item_ct1) {
-                                 solveShort(
-                                     diagonal, vBusGpu, hBus, SubScalar(),
-                                     item_ct1, queryFrontGap, *ga, *ge, gapDiff,
-                                     rowsGpu, colsGpu, cellWidth, score, pLeft,
-                                     pRight, scorerLen, subLen, match, mismatch,
-                                     hBusScrShr_acc_ct1.get_pointer(),
-                                     hBusAffShr_acc_ct1.get_pointer(), rowGpu,
-                                     colGpu, sub, res);
-                               });
+              cgh.parallel_for(
+                  sycl::nd_range<1>(blocks * threads, threads),
+                  [=](sycl::nd_item<1> item_ct1) {
+                    solveShort(diagonal, vBusGpu, hBus, SubScalar(), item_ct1,
+                               queryFrontGap, gapOpen, gapExtend, gapDiff,
+                               rowsGpu, colsGpu, cellWidth, score, pLeft,
+                               pRight, scorerLen, subLen, match, mismatch,
+                               hBusScrShr_acc_ct1.get_pointer(),
+                               hBusAffShr_acc_ct1.get_pointer(), rowGpu, colGpu,
+                               sub, res);
+                  });
             })
             .wait();
       } else {
@@ -925,17 +957,17 @@ static void *nwFindScoreGpuKernel(void *params) try {
                              sycl::access::target::local>
                   hBusAffShr_acc_ct1(sycl::range<1>(threads), cgh);
 
-              cgh.parallel_for(sycl::nd_range<1>(blocks * threads, threads),
-                               [=](sycl::nd_item<1> item_ct1) {
-                                 solveShort(
-                                     diagonal, vBusGpu, hBus, SubScalarRev(),
-                                     item_ct1, queryFrontGap, *ga, *ge, gapDiff,
-                                     rowsGpu, colsGpu, cellWidth, score, pLeft,
-                                     pRight, scorerLen, subLen, match, mismatch,
-                                     hBusScrShr_acc_ct1.get_pointer(),
-                                     hBusAffShr_acc_ct1.get_pointer(), rowGpu,
-                                     colGpu, sub, res);
-                               });
+              cgh.parallel_for(
+                  sycl::nd_range<1>(blocks * threads, threads),
+                  [=](sycl::nd_item<1> item_ct1) {
+                    solveShort(diagonal, vBusGpu, hBus, SubScalarRev(),
+                               item_ct1, queryFrontGap, gapOpen, gapExtend,
+                               gapDiff, rowsGpu, colsGpu, cellWidth, score,
+                               pLeft, pRight, scorerLen, subLen, match,
+                               mismatch, hBusScrShr_acc_ct1.get_pointer(),
+                               hBusAffShr_acc_ct1.get_pointer(), rowGpu, colGpu,
+                               sub, res);
+                  });
             })
             .wait();
       }
@@ -949,16 +981,17 @@ static void *nwFindScoreGpuKernel(void *params) try {
                            sycl::access::target::local>
                 hBusAffShr_acc_ct1(sycl::range<1>(threads), cgh);
 
-            cgh.parallel_for(
-                sycl::nd_range<1>(blocks * threads, threads),
-                [=](sycl::nd_item<1> item_ct1) {
-                  solveShort(diagonal, vBusGpu, hBus, SubVector(), item_ct1,
-                             queryFrontGap, *ga, *ge, gapDiff, rowsGpu, colsGpu,
-                             cellWidth, score, pLeft, pRight, scorerLen, subLen,
-                             match, mismatch, hBusScrShr_acc_ct1.get_pointer(),
-                             hBusAffShr_acc_ct1.get_pointer(), rowGpu, colGpu,
-                             sub, res);
-                });
+            cgh.parallel_for(sycl::nd_range<1>(blocks * threads, threads),
+                             [=](sycl::nd_item<1> item_ct1) {
+                               solveShort(diagonal, vBusGpu, hBus, SubVector(),
+                                          item_ct1, queryFrontGap, gapOpen,
+                                          gapExtend, gapDiff, rowsGpu, colsGpu,
+                                          cellWidth, score, pLeft, pRight,
+                                          scorerLen, subLen, match, mismatch,
+                                          hBusScrShr_acc_ct1.get_pointer(),
+                                          hBusAffShr_acc_ct1.get_pointer(),
+                                          rowGpu, colGpu, sub, res);
+                             });
           })
           .wait();
     }
@@ -980,10 +1013,10 @@ static void *nwFindScoreGpuKernel(void *params) try {
               cgh.parallel_for(sycl::nd_range<1>(blocks * threads, threads),
                                [=](sycl::nd_item<1> item_ct1) {
                                  solveLong(diagonal, vBusGpu, hBus, SubScalar(),
-                                           item_ct1, queryFrontGap, *ga, *ge,
-                                           gapDiff, rowsGpu, colsGpu, cellWidth,
-                                           score, pLeft, pRight, scorerLen,
-                                           subLen, match, mismatch,
+                                           item_ct1, queryFrontGap, gapOpen,
+                                           gapExtend, gapDiff, rowsGpu, colsGpu,
+                                           cellWidth, score, pLeft, pRight,
+                                           scorerLen, subLen, match, mismatch,
                                            hBusScrShr_acc_ct1.get_pointer(),
                                            hBusAffShr_acc_ct1.get_pointer(),
                                            rowGpu, colGpu, sub, res);
@@ -1000,17 +1033,17 @@ static void *nwFindScoreGpuKernel(void *params) try {
                              sycl::access::target::local>
                   hBusAffShr_acc_ct1(sycl::range<1>(threads), cgh);
 
-              cgh.parallel_for(sycl::nd_range<1>(blocks * threads, threads),
-                               [=](sycl::nd_item<1> item_ct1) {
-                                 solveLong(
-                                     diagonal, vBusGpu, hBus, SubScalarRev(),
-                                     item_ct1, queryFrontGap, *ga, *ge, gapDiff,
-                                     rowsGpu, colsGpu, cellWidth, score, pLeft,
-                                     pRight, scorerLen, subLen, match, mismatch,
-                                     hBusScrShr_acc_ct1.get_pointer(),
-                                     hBusAffShr_acc_ct1.get_pointer(), rowGpu,
-                                     colGpu, sub, res);
-                               });
+              cgh.parallel_for(
+                  sycl::nd_range<1>(blocks * threads, threads),
+                  [=](sycl::nd_item<1> item_ct1) {
+                    solveLong(diagonal, vBusGpu, hBus, SubScalarRev(), item_ct1,
+                              queryFrontGap, gapOpen, gapExtend, gapDiff,
+                              rowsGpu, colsGpu, cellWidth, score, pLeft, pRight,
+                              scorerLen, subLen, match, mismatch,
+                              hBusScrShr_acc_ct1.get_pointer(),
+                              hBusAffShr_acc_ct1.get_pointer(), rowGpu, colGpu,
+                              sub, res);
+                  });
             })
             .wait();
       }
@@ -1024,16 +1057,17 @@ static void *nwFindScoreGpuKernel(void *params) try {
                            sycl::access::target::local>
                 hBusAffShr_acc_ct1(sycl::range<1>(threads), cgh);
 
-            cgh.parallel_for(
-                sycl::nd_range<1>(blocks * threads, threads),
-                [=](sycl::nd_item<1> item_ct1) {
-                  solveLong(diagonal, vBusGpu, hBus, SubVector(), item_ct1,
-                            queryFrontGap, *ga, *ge, gapDiff, rowsGpu, colsGpu,
-                            cellWidth, score, pLeft, pRight, scorerLen, subLen,
-                            match, mismatch, hBusScrShr_acc_ct1.get_pointer(),
-                            hBusAffShr_acc_ct1.get_pointer(), rowGpu, colGpu,
-                            sub, res);
-                });
+            cgh.parallel_for(sycl::nd_range<1>(blocks * threads, threads),
+                             [=](sycl::nd_item<1> item_ct1) {
+                               solveLong(diagonal, vBusGpu, hBus, SubVector(),
+                                         item_ct1, queryFrontGap, gapOpen,
+                                         gapExtend, gapDiff, rowsGpu, colsGpu,
+                                         cellWidth, score, pLeft, pRight,
+                                         scorerLen, subLen, match, mismatch,
+                                         hBusScrShr_acc_ct1.get_pointer(),
+                                         hBusAffShr_acc_ct1.get_pointer(),
+                                         rowGpu, colGpu, sub, res);
+                             });
           })
           .wait();
     }

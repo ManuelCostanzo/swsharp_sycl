@@ -1,9 +1,9 @@
 CC = g++ -march=native -O3
 
 ifeq ($(BACK), icpx)
-	CP = icpx -fsycl -fsycl-unnamed-lambda -O3
-	CU = icpx -fsycl -fsycl-unnamed-lambda -O3
-	LD = icpx -fsycl -fsycl-unnamed-lambda -O3
+	CP = icpx -fsycl -fsycl-unnamed-lambda -fsycl-targets=spir64_x86_64 -O3 -march=native
+	CU = icpx -fsycl -fsycl-unnamed-lambda -fsycl-targets=spir64_x86_64 -O3 -march=native
+	LD = icpx -fsycl -fsycl-unnamed-lambda -fsycl-targets=spir64_x86_64 -O3 -march=native
 endif
 
 
@@ -26,9 +26,9 @@ ifeq ($(BACK), amd)
 endif
 
 ifeq ($(BACK), acpp)
-	CP = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
-	CU = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
-	LD = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
+	CP = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP 
+	CU = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP  
+	LD = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP 
 endif
 
 
