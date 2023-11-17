@@ -81,6 +81,7 @@ typedef struct GpuDatabase {
   int *scores;
   sycl::int2 *hBus;
   int sequencesCols;
+  int sequencesRows;
   int blocks;
 } GpuDatabase;
 
@@ -285,32 +286,32 @@ static void hwSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
                             int indexesLen, int block,
                             sycl::nd_item<1> item_ct1, int gapOpen_,
                             int gapExtend_, int rows_, int rowsPadded_,
-                            int width_, int qpWidth_, int *seqsGpu,
-                            sycl::char4 *qpGpu);
+                            int width_, int qpWidth_, size_t sequencesSize,
+                            int *seqsGpu, sycl::char4 *qpGpu);
 
 static void nwSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
                             int *lengthsPadded, int *offsets, int *indexes,
                             int indexesLen, int block,
                             sycl::nd_item<1> item_ct1, int gapOpen_,
                             int gapExtend_, int rows_, int rowsPadded_,
-                            int width_, int qpWidth_, int *seqsGpu,
-                            sycl::char4 *qpGpu);
+                            int width_, int qpWidth_, size_t sequencesSize,
+                            int *seqsGpu, sycl::char4 *qpGpu);
 
 static void ovSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
                             int *lengthsPadded, int *offsets, int *indexes,
                             int indexesLen, int block,
                             sycl::nd_item<1> item_ct1, int gapOpen_,
                             int gapExtend_, int rows_, int rowsPadded_,
-                            int width_, int qpWidth_, int *seqsGpu,
-                            sycl::char4 *qpGpu);
+                            int width_, int qpWidth_, size_t sequencesSize,
+                            int *seqsGpu, sycl::char4 *qpGpu);
 
 static void swSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
                             int *lengthsPadded, int *offsets, int *indexes,
                             int indexesLen, int block,
                             sycl::nd_item<1> item_ct1, int gapOpen_,
                             int gapExtend_, int rows_, int rowsPadded_,
-                            int width_, int qpWidth_, int *seqsGpu,
-                            sycl::char4 *qpGpu);
+                            int width_, int qpWidth_, size_t sequencesSize,
+                            int *seqsGpu, sycl::char4 *qpGpu);
 
 // query profile
 static QueryProfile *createQueryProfile(Chain *query, Scorer *scorer);
@@ -610,6 +611,7 @@ static ShortDatabase *createDatabase(Chain **database, int databaseLen,
     int *lengthsPadded = (int *)calloc(length4, sizeof(int)); // GPU-SIMD
 
     size_t sequencesSize = sequencesRows * sequencesCols * sizeof(sycl::char4);
+
     sycl::char4 *sequences = (sycl::char4 *)malloc(sequencesSize);
     memset(sequences, 127, sequencesSize);
 
@@ -796,6 +798,7 @@ static void *createDatabaseGpu(void *param) try {
   gpuDatabase->scores = scoresGpu;
   gpuDatabase->hBus = hBusGpu;
   gpuDatabase->sequencesCols = sequencesCols;
+  gpuDatabase->sequencesRows = sequencesRows;
   gpuDatabase->blocks = blocks;
 
   free(offsets);
@@ -1406,6 +1409,9 @@ static void *kernelThreadShort(void *param) try {
   int rows = queryProfile->length;
   int rowsGpu = queryProfile->height * 4;
   int sequencesCols = gpuDatabase->sequencesCols;
+  int sequencesRows = gpuDatabase->sequencesRows;
+
+  size_t sequencesSize = sequencesRows * sequencesCols;
 
   int qpWidth = queryProfile->width;
   sycl::char4 *qpGpu = queryProfileGpu->data;
@@ -1489,7 +1495,7 @@ static void *kernelThreadShort(void *param) try {
                                   lengthsPaddedGpu, offsetsGpu, indexesGpu,
                                   indexesLenLocal, block, item_ct1, gapOpen,
                                   gapExtend, rows, rowsGpu, sequencesCols,
-                                  qpWidth, seqsGpu, qpGpu);
+                                  qpWidth, sequencesSize, seqsGpu, qpGpu);
                 });
           } else if (type == NW_ALIGN) {
             cgh.parallel_for(
@@ -1499,7 +1505,7 @@ static void *kernelThreadShort(void *param) try {
                                   lengthsPaddedGpu, offsetsGpu, indexesGpu,
                                   indexesLenLocal, block, item_ct1, gapOpen,
                                   gapExtend, rows, rowsGpu, sequencesCols,
-                                  qpWidth, seqsGpu, qpGpu);
+                                  qpWidth, sequencesSize, seqsGpu, qpGpu);
                 });
           } else if (type == HW_ALIGN) {
             cgh.parallel_for(
@@ -1509,7 +1515,7 @@ static void *kernelThreadShort(void *param) try {
                                   lengthsPaddedGpu, offsetsGpu, indexesGpu,
                                   indexesLenLocal, block, item_ct1, gapOpen,
                                   gapExtend, rows, rowsGpu, sequencesCols,
-                                  qpWidth, seqsGpu, qpGpu);
+                                  qpWidth, sequencesSize, seqsGpu, qpGpu);
                 });
 
           } else if (type == OV_ALIGN) {
@@ -1520,7 +1526,7 @@ static void *kernelThreadShort(void *param) try {
                                   lengthsPaddedGpu, offsetsGpu, indexesGpu,
                                   indexesLenLocal, block, item_ct1, gapOpen,
                                   gapExtend, rows, rowsGpu, sequencesCols,
-                                  qpWidth, seqsGpu, qpGpu);
+                                  qpWidth, sequencesSize, seqsGpu, qpGpu);
                 });
           }
         })
@@ -1740,8 +1746,8 @@ static void hwSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
                             int indexesLen, int block,
                             sycl::nd_item<1> item_ct1, int gapOpen_,
                             int gapExtend_, int rows_, int rowsPadded_,
-                            int width_, int qpWidth_, int *seqsGpu,
-                            sycl::char4 *qpGpu) {
+                            int width_, int qpWidth_, size_t sequencesSize,
+                            int *seqsGpu, sycl::char4 *qpGpu) {
 
   int tid = item_ct1.get_local_id(0) +
             item_ct1.get_group(0) * item_ct1.get_local_range(0);
@@ -1915,8 +1921,8 @@ static void nwSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
                             int indexesLen, int block,
                             sycl::nd_item<1> item_ct1, int gapOpen_,
                             int gapExtend_, int rows_, int rowsPadded_,
-                            int width_, int qpWidth_, int *seqsGpu,
-                            sycl::char4 *qpGpu) {
+                            int width_, int qpWidth_, size_t sequencesSize,
+                            int *seqsGpu, sycl::char4 *qpGpu) {
 
   int tid = item_ct1.get_local_id(0) +
             item_ct1.get_group(0) * item_ct1.get_local_range(0);
@@ -1973,7 +1979,6 @@ static void nwSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
     for (int j = 0; j < cols; ++j) {
 
       int columnCodes = seqsGpu[(j + rowOff) * width_ + colOff];
-      ;
 
 #pragma unroll
       for (int k = 0; k < 4; ++k) {
@@ -2091,8 +2096,8 @@ static void ovSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
                             int indexesLen, int block,
                             sycl::nd_item<1> item_ct1, int gapOpen_,
                             int gapExtend_, int rows_, int rowsPadded_,
-                            int width_, int qpWidth_, int *seqsGpu,
-                            sycl::char4 *qpGpu) {
+                            int width_, int qpWidth_, size_t sequencesSize,
+                            int *seqsGpu, sycl::char4 *qpGpu) {
 
   int tid = item_ct1.get_local_id(0) +
             item_ct1.get_group(0) * item_ct1.get_local_range(0);
@@ -2139,8 +2144,11 @@ static void ovSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
 
     for (int j = 0; j < cols; ++j) {
 
-      int columnCodes = seqsGpu[(j + rowOff) * width_ + colOff];
-      ;
+      int seqId = (j + rowOff) * width_ + colOff;
+      if (seqId >= sequencesSize)
+        break;
+
+      int columnCodes = seqsGpu[seqId];
 
 #pragma unroll
       for (int k = 0; k < 4; ++k) {
@@ -2259,8 +2267,8 @@ static void swSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
                             int indexesLen, int block,
                             sycl::nd_item<1> item_ct1, int gapOpen_,
                             int gapExtend_, int rows_, int rowsPadded_,
-                            int width_, int qpWidth_, int *seqsGpu,
-                            sycl::char4 *qpGpu) {
+                            int width_, int qpWidth_, size_t sequencesSize,
+                            int *seqsGpu, sycl::char4 *qpGpu) {
 
   int tid = item_ct1.get_local_id(0) +
             item_ct1.get_group(0) * item_ct1.get_local_range(0);
@@ -2277,6 +2285,9 @@ static void swSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
 
   int score = 0;
 
+  if ((width_ + colOff) > sequencesSize)
+    return;
+
   sycl::int4 scrUp;
   sycl::int4 affUp;
   sycl::int4 mchUp;
@@ -2292,6 +2303,8 @@ static void swSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
     hBus[j * width_ + tid] = sycl::int2(0, 0);
   }
 
+  bool doWork = true;
+
   for (int i = 0; i < rowsPadded_; i += 8) {
 
     scrUp = INT4_ZERO;
@@ -2304,112 +2317,119 @@ static void swSolveShortGpu(int *scores, sycl::int2 *hBus, int *lengths,
 
     for (int j = 0; j < cols; ++j) {
 
-      int columnCodes = seqsGpu[(j + rowOff) * width_ + colOff];
+      size_t seqId = (j + rowOff) * width_ + colOff;
+      if (seqId >= sequencesSize)
+        doWork = false;
+
+      if (doWork) {
+        int columnCodes = seqsGpu[seqId];
 
 #pragma unroll
-      for (int k = 0; k < 4; ++k) {
+        for (int k = 0; k < 4; ++k) {
 
-        wBus = hBus[(j * 4 + k) * width_ + tid];
+          wBus = hBus[(j * 4 + k) * width_ + tid];
 
-        char code = (columnCodes >> (k << 3));
+          char code = (columnCodes >> (k << 3));
 
-        sycl::char4 rowScores =
-            qpGpu[(i >> 2) * qpWidth_ +
-                  sycl::min(static_cast<int>(code), qpWidth_ - 1)];
+          sycl::char4 rowScores =
+              qpGpu[(i >> 2) * qpWidth_ +
+                    sycl::min(static_cast<int>(code), qpWidth_ - 1)];
 
-        del =
-            sycl::max((int)(wBus.x() - gapOpen_), (int)(wBus.y() - gapExtend_));
-        affUp.x() =
-            sycl::max((int)(scrUp.x() - gapOpen_), (affUp.x() - gapExtend_));
-        scrUp.x() = mchUp.x() + rowScores.x();
-        scrUp.x() = sycl::max(scrUp.x(), del);
-        scrUp.x() = sycl::max(scrUp.x(), affUp.x());
-        scrUp.x() = sycl::max(scrUp.x(), 0);
-        mchUp.x() = wBus.x();
-        score = sycl::max(score, scrUp.x());
+          del = sycl::max((int)(wBus.x() - gapOpen_),
+                          (int)(wBus.y() - gapExtend_));
+          affUp.x() =
+              sycl::max((int)(scrUp.x() - gapOpen_), (affUp.x() - gapExtend_));
+          scrUp.x() = mchUp.x() + rowScores.x();
+          scrUp.x() = sycl::max(scrUp.x(), del);
+          scrUp.x() = sycl::max(scrUp.x(), affUp.x());
+          scrUp.x() = sycl::max(scrUp.x(), 0);
+          mchUp.x() = wBus.x();
+          score = sycl::max(score, scrUp.x());
 
-        del = sycl::max((int)(scrUp.x() - gapOpen_), (del - gapExtend_));
-        affUp.y() =
-            sycl::max((int)(scrUp.y() - gapOpen_), (affUp.y() - gapExtend_));
-        scrUp.y() = mchUp.y() + rowScores.y();
-        scrUp.y() = sycl::max(scrUp.y(), del);
-        scrUp.y() = sycl::max(scrUp.y(), affUp.y());
-        scrUp.y() = sycl::max(scrUp.y(), 0);
-        mchUp.y() = scrUp.x();
-        score = sycl::max(score, scrUp.y());
+          del = sycl::max((int)(scrUp.x() - gapOpen_), (del - gapExtend_));
+          affUp.y() =
+              sycl::max((int)(scrUp.y() - gapOpen_), (affUp.y() - gapExtend_));
+          scrUp.y() = mchUp.y() + rowScores.y();
+          scrUp.y() = sycl::max(scrUp.y(), del);
+          scrUp.y() = sycl::max(scrUp.y(), affUp.y());
+          scrUp.y() = sycl::max(scrUp.y(), 0);
+          mchUp.y() = scrUp.x();
+          score = sycl::max(score, scrUp.y());
 
-        del = sycl::max((int)(scrUp.y() - gapOpen_), (del - gapExtend_));
-        affUp.z() =
-            sycl::max((int)(scrUp.z() - gapOpen_), (affUp.z() - gapExtend_));
-        scrUp.z() = mchUp.z() + rowScores.z();
-        scrUp.z() = sycl::max(scrUp.z(), del);
-        scrUp.z() = sycl::max(scrUp.z(), affUp.z());
-        scrUp.z() = sycl::max(scrUp.z(), 0);
-        mchUp.z() = scrUp.y();
-        score = sycl::max(score, scrUp.z());
+          del = sycl::max((int)(scrUp.y() - gapOpen_), (del - gapExtend_));
+          affUp.z() =
+              sycl::max((int)(scrUp.z() - gapOpen_), (affUp.z() - gapExtend_));
+          scrUp.z() = mchUp.z() + rowScores.z();
+          scrUp.z() = sycl::max(scrUp.z(), del);
+          scrUp.z() = sycl::max(scrUp.z(), affUp.z());
+          scrUp.z() = sycl::max(scrUp.z(), 0);
+          mchUp.z() = scrUp.y();
+          score = sycl::max(score, scrUp.z());
 
-        del = sycl::max((int)(scrUp.z() - gapOpen_), (del - gapExtend_));
-        affUp.w() =
-            sycl::max((int)(scrUp.w() - gapOpen_), (affUp.w() - gapExtend_));
-        scrUp.w() = mchUp.w() + rowScores.w();
-        scrUp.w() = sycl::max(scrUp.w(), del);
-        scrUp.w() = sycl::max(scrUp.w(), affUp.w());
-        scrUp.w() = sycl::max(scrUp.w(), 0);
-        mchUp.w() = scrUp.z();
-        score = sycl::max(score, scrUp.w());
+          del = sycl::max((int)(scrUp.z() - gapOpen_), (del - gapExtend_));
+          affUp.w() =
+              sycl::max((int)(scrUp.w() - gapOpen_), (affUp.w() - gapExtend_));
+          scrUp.w() = mchUp.w() + rowScores.w();
+          scrUp.w() = sycl::max(scrUp.w(), del);
+          scrUp.w() = sycl::max(scrUp.w(), affUp.w());
+          scrUp.w() = sycl::max(scrUp.w(), 0);
+          mchUp.w() = scrUp.z();
+          score = sycl::max(score, scrUp.w());
 
-        rowScores = qpGpu[((i >> 2) + 1) * qpWidth_ +
-                          sycl::min(static_cast<int>(code), qpWidth_ - 1)];
+          rowScores = qpGpu[((i >> 2) + 1) * qpWidth_ +
+                            sycl::min(static_cast<int>(code), qpWidth_ - 1)];
 
-        del = sycl::max((int)(scrUp.w() - gapOpen_), (del - gapExtend_));
-        affDown.x() = sycl::max((int)(scrDown.x() - gapOpen_),
-                                (affDown.x() - gapExtend_));
-        scrDown.x() = mchDown.x() + rowScores.x();
-        scrDown.x() = sycl::max(scrDown.x(), del);
-        scrDown.x() = sycl::max(scrDown.x(), affDown.x());
-        scrDown.x() = sycl::max(scrDown.x(), 0);
-        mchDown.x() = scrUp.w();
-        score = sycl::max(score, scrDown.x());
+          del = sycl::max((int)(scrUp.w() - gapOpen_), (del - gapExtend_));
+          affDown.x() = sycl::max((int)(scrDown.x() - gapOpen_),
+                                  (affDown.x() - gapExtend_));
+          scrDown.x() = mchDown.x() + rowScores.x();
+          scrDown.x() = sycl::max(scrDown.x(), del);
+          scrDown.x() = sycl::max(scrDown.x(), affDown.x());
+          scrDown.x() = sycl::max(scrDown.x(), 0);
+          mchDown.x() = scrUp.w();
+          score = sycl::max(score, scrDown.x());
 
-        del = sycl::max((int)(scrDown.x() - gapOpen_), (del - gapExtend_));
-        affDown.y() = sycl::max((int)(scrDown.y() - gapOpen_),
-                                (affDown.y() - gapExtend_));
-        scrDown.y() = mchDown.y() + rowScores.y();
-        scrDown.y() = sycl::max(scrDown.y(), del);
-        scrDown.y() = sycl::max(scrDown.y(), affDown.y());
-        scrDown.y() = sycl::max(scrDown.y(), 0);
-        mchDown.y() = scrDown.x();
-        score = sycl::max(score, scrDown.y());
+          del = sycl::max((int)(scrDown.x() - gapOpen_), (del - gapExtend_));
+          affDown.y() = sycl::max((int)(scrDown.y() - gapOpen_),
+                                  (affDown.y() - gapExtend_));
+          scrDown.y() = mchDown.y() + rowScores.y();
+          scrDown.y() = sycl::max(scrDown.y(), del);
+          scrDown.y() = sycl::max(scrDown.y(), affDown.y());
+          scrDown.y() = sycl::max(scrDown.y(), 0);
+          mchDown.y() = scrDown.x();
+          score = sycl::max(score, scrDown.y());
 
-        del = sycl::max((int)(scrDown.y() - gapOpen_), (del - gapExtend_));
-        affDown.z() = sycl::max((int)(scrDown.z() - gapOpen_),
-                                (affDown.z() - gapExtend_));
-        scrDown.z() = mchDown.z() + rowScores.z();
-        scrDown.z() = sycl::max(scrDown.z(), del);
-        scrDown.z() = sycl::max(scrDown.z(), affDown.z());
-        scrDown.z() = sycl::max(scrDown.z(), 0);
-        mchDown.z() = scrDown.y();
-        score = sycl::max(score, scrDown.z());
+          del = sycl::max((int)(scrDown.y() - gapOpen_), (del - gapExtend_));
+          affDown.z() = sycl::max((int)(scrDown.z() - gapOpen_),
+                                  (affDown.z() - gapExtend_));
+          scrDown.z() = mchDown.z() + rowScores.z();
+          scrDown.z() = sycl::max(scrDown.z(), del);
+          scrDown.z() = sycl::max(scrDown.z(), affDown.z());
+          scrDown.z() = sycl::max(scrDown.z(), 0);
+          mchDown.z() = scrDown.y();
+          score = sycl::max(score, scrDown.z());
 
-        del = sycl::max((int)(scrDown.z() - gapOpen_), (del - gapExtend_));
-        affDown.w() = sycl::max((int)(scrDown.w() - gapOpen_),
-                                (affDown.w() - gapExtend_));
-        scrDown.w() = mchDown.w() + rowScores.w();
-        scrDown.w() = sycl::max(scrDown.w(), del);
-        scrDown.w() = sycl::max(scrDown.w(), affDown.w());
-        scrDown.w() = sycl::max(scrDown.w(), 0);
-        mchDown.w() = scrDown.z();
-        score = sycl::max(score, scrDown.w());
+          del = sycl::max((int)(scrDown.z() - gapOpen_), (del - gapExtend_));
+          affDown.w() = sycl::max((int)(scrDown.w() - gapOpen_),
+                                  (affDown.w() - gapExtend_));
+          scrDown.w() = mchDown.w() + rowScores.w();
+          scrDown.w() = sycl::max(scrDown.w(), del);
+          scrDown.w() = sycl::max(scrDown.w(), affDown.w());
+          scrDown.w() = sycl::max(scrDown.w(), 0);
+          mchDown.w() = scrDown.z();
+          score = sycl::max(score, scrDown.w());
 
-        wBus.x() = scrDown.w();
-        wBus.y() = del;
+          wBus.x() = scrDown.w();
+          wBus.y() = del;
 
-        hBus[(j * 4 + k) * width_ + tid] = wBus;
+          hBus[(j * 4 + k) * width_ + tid] = wBus;
+        }
       }
     }
   }
 
-  scores[id] = score;
+  if (doWork)
+    scores[id] = score;
 }
 
 //------------------------------------------------------------------------------

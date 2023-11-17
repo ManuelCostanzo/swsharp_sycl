@@ -1,7 +1,6 @@
 #!/bin/bash
 
-export DPCPP_HOME=/opt/build/intel
-export PATH=$DPCPP_HOME/llvm/build/bin:$PATH
-export LD_LIBRARY_PATH=$DPCPP_HOME/llvm/build/lib:$LD_LIBRARY_PATH
-source /opt/intel/oneapi/setvars.sh
-
+export LD_PRELOAD=/opt/rocm/lib/libamdhip64.so:$LD_PRELOAD
+export INTEL_LLVM_PATH=/opt/intel/llvm
+export PATH=$INTEL_LLVM_PATH/llvm/build/bin/:$PATH
+export LD_LIBRARY_PATH=$INTEL_LLVM_PATH/llvm/build/lib/:$LD_LIBRARY_PATH
