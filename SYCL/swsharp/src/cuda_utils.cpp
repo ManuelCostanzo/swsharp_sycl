@@ -40,7 +40,6 @@ std::unordered_map<int, sycl::queue> queues;
 
 extern void cudaGetCards(int **cards, int *cardsLen) {
 
-#ifdef SYCL_LANGUAGE_VERSION
   *cardsLen = sycl::device::get_devices().size();
 
   *cards = (int *)malloc(*cardsLen * sizeof(int));
@@ -48,15 +47,12 @@ extern void cudaGetCards(int **cards, int *cardsLen) {
   for (int i = 0; i < *cardsLen; ++i) {
     (*cards)[i] = i;
   }
-#else
   *cards = NULL;
   *cardsLen = 0;
-#endif
 }
 
 extern int cudaCheckCards(int *cards, int cardsLen) {
 
-#ifdef SYCL_LANGUAGE_VERSION
   int maxDeviceId;
   maxDeviceId = sycl::device::get_devices().size();
 
@@ -67,9 +63,7 @@ extern int cudaCheckCards(int *cards, int cardsLen) {
   }
 
   return 1;
-#else
   return cardsLen == 0;
-#endif
 }
 
 extern void loadQueues(int *cards, int cardsLen) {
@@ -80,8 +74,6 @@ extern void loadQueues(int *cards, int cardsLen) {
 }
 
 extern size_t cudaMinimalGlobalMemory(int *cards, int cardsLen) {
-
-#ifdef SYCL_LANGUAGE_VERSION
 
   if (cards == NULL || cardsLen == 0) {
     return 0;
@@ -96,9 +88,8 @@ extern size_t cudaMinimalGlobalMemory(int *cards, int cardsLen) {
   }
 
   return minMem;
-#else
+
   return 0;
-#endif
 }
 
 extern void maxWorkGroups(int card, int defaultBlocks, int defaultThreads,

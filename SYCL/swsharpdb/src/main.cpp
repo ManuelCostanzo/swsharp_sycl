@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/time.h>
 
-#define SYCL_LANGUAGE_VERSION 1
+#define SYCL 1
 #include "swsharp/evalue.h"
 #include "swsharp/swsharp.h"
 
@@ -360,6 +360,11 @@ int main(int argc, char *argv[]) {
 
   threadPoolTerminate();
   free(cards);
+
+  for (auto pair : queues) {
+    pair.second.wait();
+  }
+  queues.clear();
 
   return 0;
 }

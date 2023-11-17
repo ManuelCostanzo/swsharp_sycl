@@ -251,7 +251,8 @@ solveShortDelegated(int d, VBus vBus, sycl::int2 *hBus, sycl::int3 *results,
       hBusScrShr[localId] = hBus[col].x();
       hBusAffShr[localId] = hBus[col].y();
 
-      rowCodes = rowGpu[row >> 2];
+      if (0 <= row && row < rows_)
+        rowCodes = rowGpu[row >> 2];
 
       res = {0, 0, 0};
     }
@@ -339,16 +340,19 @@ solveShortDelegated(int d, VBus vBus, sycl::int2 *hBus, sycl::int3 *results,
       }
     }
 
+    int a = atom.rScr.w();
+    int d = del;
+
     item_ct1.barrier(sycl::access::fence_space::local_space);
 
     if (doWork) {
       if (0 <= row && row < rows_) {
 
         if (localId == localRangeId - 1 || i == localRangeId - 1) {
-          hBus[col] = sycl::int2(atom.rScr.w(), del);
+          hBus[col] = sycl::int2(a, d);
         } else {
-          hBusScrShr[localId + 1] = atom.rScr.w();
-          hBusAffShr[localId + 1] = del;
+          hBusScrShr[localId + 1] = a;
+          hBusAffShr[localId + 1] = d;
         }
       }
 
@@ -432,6 +436,7 @@ solveShortNormal(int d, VBus vBus, sycl::int2 *hBus, sycl::int3 *results,
   }
 
   int del;
+  int a;
 
   for (int i = 0; i < localRangeId; ++i, ++col) {
 
@@ -507,32 +512,37 @@ solveShortNormal(int d, VBus vBus, sycl::int2 *hBus, sycl::int3 *results,
       atom.lAff = atom.rAff;
     }
 
+    a = atom.rScr.w();
+    int d = del;
+
     item_ct1.barrier(sycl::access::fence_space::local_space);
 
     if (doWork) {
       if (localId == localRangeId - 1) {
-        hBus[col] = sycl::int2(atom.rScr.w(), del);
+        hBus[col] = sycl::int2(a, d);
       } else {
-        hBusScrShr[localId + 1] = atom.rScr.w();
-        hBusAffShr[localId + 1] = del;
+        hBusScrShr[localId + 1] = a;
+        hBusAffShr[localId + 1] = d;
       }
     }
 
     item_ct1.barrier(sycl::access::fence_space::local_space);
   }
 
-  if (!doWork)
-    return;
+  int c = a;
+  int dd = del;
+  if (doWork) {
 
-  const int vBusIdx = (row >> 2) % (groupRangeId * localRangeId);
-  vBus.mch[vBusIdx] = atom.up.x();
-  vBus.scr[vBusIdx] = atom.lScr;
-  vBus.aff[vBusIdx] = atom.lAff;
+    const int vBusIdx = (row >> 2) % (groupRangeId * localRangeId);
+    vBus.mch[vBusIdx] = atom.up.x();
+    vBus.scr[vBusIdx] = atom.lScr;
+    vBus.aff[vBusIdx] = atom.lAff;
 
-  hBus[col - 1] = sycl::int2(atom.rScr.w(), del);
+    hBus[col - 1] = sycl::int2(c, dd);
 
-  if (res.x() > results[groupId * localRangeId + localId].x()) {
-    results[groupId * localRangeId + localId] = res;
+    if (res.x() > results[groupId * localRangeId + localId].x()) {
+      results[groupId * localRangeId + localId] = res;
+    }
   }
 }
 
@@ -624,6 +634,7 @@ static void solveLong(int d, VBus vBus, sycl::int2 *hBus, int *bBus,
   }
 
   int del;
+  int a;
 
   for (int i = 0; i < cellWidth_ - localRangeId; ++i, ++col) {
 
@@ -699,27 +710,32 @@ static void solveLong(int d, VBus vBus, sycl::int2 *hBus, int *bBus,
       atom.lAff = atom.rAff;
     }
 
+    a = atom.rScr.w();
+    int d = del;
+
     item_ct1.barrier(sycl::access::fence_space::local_space);
 
     if (doWork) {
       if (localId == localRangeId - 1) {
-        hBus[col] = sycl::int2(atom.rScr.w(), del);
+        hBus[col] = sycl::int2(a, d);
       } else {
-        hBusScrShr[localId + 1] = atom.rScr.w();
-        hBusAffShr[localId + 1] = del;
+        hBusScrShr[localId + 1] = a;
+        hBusAffShr[localId + 1] = d;
       }
     }
 
     item_ct1.barrier(sycl::access::fence_space::local_space);
   }
 
+  int c = a;
+  int dd = del;
   if (doWork) {
     const int vBusIdx = (row >> 2) % (groupRangeId * localRangeId);
     vBus.mch[vBusIdx] = atom.up.x();
     vBus.scr[vBusIdx] = atom.lScr;
     vBus.aff[vBusIdx] = atom.lAff;
 
-    hBus[col - 1] = sycl::int2(atom.rScr.w(), del);
+    hBus[col - 1] = sycl::int2(c, dd);
 
     if (res.x() > results[groupId * localRangeId + localId].x()) {
       results[groupId * localRangeId + localId] = res;

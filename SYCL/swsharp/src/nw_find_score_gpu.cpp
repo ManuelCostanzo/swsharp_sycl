@@ -272,7 +272,8 @@ solveShortDelegated(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
       hBusScrShr[localId] = hBus[col].x();
       hBusAffShr[localId] = hBus[col].y();
 
-      rowCodes = rowGpu[row >> 2];
+      if (0 <= row && row < rows_)
+        rowCodes = rowGpu[row >> 2];
     }
   }
 

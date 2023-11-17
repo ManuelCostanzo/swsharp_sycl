@@ -1,36 +1,34 @@
 CC = g++ -march=native -O3
 
 ifeq ($(BACK), icpx)
-	CP = icpx -fsycl -fsycl-unnamed-lambda -fsycl-targets=spir64_x86_64 -O3 -march=native
-	CU = icpx -fsycl -fsycl-unnamed-lambda -fsycl-targets=spir64_x86_64 -O3 -march=native
-	LD = icpx -fsycl -fsycl-unnamed-lambda -fsycl-targets=spir64_x86_64 -O3 -march=native
+#SYCL_TARGETS=spir64,spir64_x86_64
+	CP = icpx -fsycl -fsycl-unnamed-lambda -O3 -fsycl-targets=$(SYCL_TARGETS) -DSYCL
 endif
-
 
 ifeq ($(BACK), intel)
-	 CP = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
-	 CU = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
-	 LD = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
+#SYCL_TARGETS=nvptx64-nvidia-cuda,spir64
+	CP = clang++ -fsycl -fsycl-targets=$(SYCL_TARGETS) -fsycl-unnamed-lambda -O3 -DSYCL
 endif
 
-ifeq ($(BACK), fpga)
-	CP = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v 
-	CU = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v 
-	LD = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v
-endif
-
-ifeq ($(BACK), amd)
-	CP = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3
-	CU = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3
-	LD = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3
+ifeq ($(BACK), intel_amd)
+#SYCL_TARGETS=spir64_x86_64,amdgcn-amd-amdhsa 
+#SYCL_TARGET_BACKEND=backend=amdgcn-amd-amdhsa
+#SYCL_TARGET_OFFLOAD=gfx1031
+	CP = clang++ -fsycl -fsycl-targets=$(SYCL_TARGETS) -Xsycl-target-backend=$(SYCL_TARGET_BACKEND) --offload-arch=$(SYCL_TARGET_OFFLOAD) -O3  -DSYCL
 endif
 
 ifeq ($(BACK), acpp)
-	CP = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP 
-	CU = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP  
-	LD = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP 
+#SYCL_TARGETS=generic
+#SYCL_TARGETS=cuda:sm_80
+	CP = acpp --acpp-targets="$(SYCL_TARGETS)" -O3 -DHIP -DSYCL
 endif
 
+ifeq ($(BACK), fpga)
+	CP = icpx -fsycl -fintelfpga -Xshardware -Xstarget=/opt/intel/oneapi/intel_a10gx_pac:pac_a10 -v  -DSYCL
+endif
+
+CU = ${CP} 
+LD = ${CP} 
 
 
 NAME = swsharp
@@ -62,12 +60,12 @@ API = $(addprefix $(SRC_DIR)/, align.h alignment.h chain.h constants.h \
 
 SRC = $(shell find $(SRC_DIR) -type f \( -iname \*.cpp -o -iname \*.c \))
 HDR = $(shell find $(SRC_DIR) -type f \( -iname \*.h \))
-OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(SRC))))
+OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix _$(BIN_OUTPUT).o, $(basename $(SRC))))
 DEP = $(OBJ:.o=.d)
 INC = $(subst $(SRC_DIR), $(INC_DIR), $(API))
-LIB = $(LIB_DIR)/lib$(NAME).a
+LIB = $(LIB_DIR)/lib$(NAME)_$(BIN_OUTPUT).a
 EXC = $(NAME)
-BIN = $(EXC_DIR)/$(EXC)
+BIN = $(EXC_DIR)/$(EXC)_$(BIN_OUTPUT)
 DOC = $(DOC_DIR)/Doxyfile
 #WIN = $(subst $(SRC_DIR), $(WIN_DIR), $(HDR) $(SRC))
 
@@ -96,12 +94,12 @@ $(EXC): $(OBJ) $(DEP_LIBS)
 	@mkdir -p $(dir $@)
 	@$(LD) $(OBJ) -o $@ $(LD_FLAGS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJ_DIR)/%_$(BIN_OUTPUT).o: $(SRC_DIR)/%.c
 	@echo [CC] $<
 	@mkdir -p $(dir $@)
 	@$(CC) $< -c -o $@ -MMD $(CC_FLAGS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(OBJ_DIR)/%_$(BIN_OUTPUT).o: $(SRC_DIR)/%.cpp
 	@echo [CP] $<
 	@mkdir -p $(dir $@)
 	@$(CP) $< -c -o $@ -MMD $(CP_FLAGS)
@@ -132,10 +130,14 @@ docs:
 	
 clean:
 	@echo [RM] cleaning
-	@rm -rf $(OBJ_DIR) $(EXC)
+	@if [ -d "$(OBJ_DIR)" ]; then find $(OBJ_DIR) -name '*_$(BIN_OUTPUT).*' -exec rm -rf {} +; fi
+	@rm -rf $(EXC)
 
 remove:
 	@echo [RM] removing
-	@rm -rf $(INC_DIR) $(LIB) $(BIN) $(EXC)
+	@if [ -f "$(LIB)" ]; then rm -rf $(LIB); fi
+	@if [ -f "$(BIN)" ]; then rm -rf $(BIN); fi
+	@if [ -f "$(EXC)" ]; then rm -rf $(EXC); fi
+
 
 -include $(DEP)

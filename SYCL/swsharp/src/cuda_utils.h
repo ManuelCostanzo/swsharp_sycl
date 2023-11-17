@@ -1,5 +1,5 @@
 
-#ifdef SYCL_LANGUAGE_VERSION
+#ifdef SYCL
 #include <CL/sycl.hpp>
 #ifdef HIP
 namespace sycl = cl::sycl;

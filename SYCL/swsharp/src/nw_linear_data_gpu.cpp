@@ -562,7 +562,7 @@ static void solveShortNormal(int d, VBus vBus, sycl::int2 *hBus, Sub sub,
   int dd = del;
 
   if (doWork) {
-    hBus[col - 1] = sycl::int2(a, dd);
+    hBus[col - 1] = sycl::int2(c, dd);
 
     vBus.mch[(row >> 2) % (groupRangeId * localRangeId)] = atom.up.x();
     vBus.scr[(row >> 2) % (groupRangeId * localRangeId)] = atom.lScr;

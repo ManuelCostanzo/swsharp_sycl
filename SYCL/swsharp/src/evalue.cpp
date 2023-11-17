@@ -29,6 +29,7 @@ erucci@lidi.info.unlp.edu.ar
 #ifdef HIP
 namespace sycl = cl::sycl;
 #endif
+#include <cstdlib>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -120,11 +121,9 @@ static void eValuesCpu(double *values, int *scores, Chain *query,
                        Chain **database, int databaseLen,
                        EValueParams *eValueParams);
 
-#ifdef SYCL_LANGUAGE_VERSION
 static void eValuesGpu(double *values, int *scores, Chain *query,
                        Chain **database, int databaseLen, int *cards,
                        int cardsLen, EValueParams *eValueParams);
-#endif // __CUDACC__
 
 static double calculateEValueProt(int score, int queryLen, int targetLen,
                                   EValueParams *params);
@@ -136,7 +135,6 @@ static double calculateEValueDna(int score, int queryLen, int targetLen,
 double erf(double x);
 #endif
 
-#ifdef SYCL_LANGUAGE_VERSION
 static void kernelProt(double *values, sycl::int2 *data,
                        sycl::nd_item<1> item_ct1, int length_, int queryLen_,
                        double paramsLength_, double paramsLambda_,
@@ -147,7 +145,6 @@ static void kernelProt(double *values, sycl::int2 *data,
 static void kernelDna(double *values, sycl::int2 *data,
                       sycl::nd_item<1> item_ct1, int length_, int queryLen_,
                       double paramsLambda_, double paramsLogK_);
-#endif // __CUDACC__
 
 //******************************************************************************
 
@@ -238,16 +235,12 @@ extern void eValues(double *values, int *scores, Chain *query, Chain **database,
                     int databaseLen, int *cards, int cardsLen,
                     EValueParams *eValueParams) {
 
-#ifdef SYCL_LANGUAGE_VERSION
-  if (cardsLen == 0) {
-#endif // __CUDACC__
+  if (cardsLen == 0 || getenv("NO_DOUBLE_SUPPORT") != nullptr) {
     eValuesCpu(values, scores, query, database, databaseLen, eValueParams);
-#ifdef SYCL_LANGUAGE_VERSION
   } else {
     eValuesGpu(values, scores, query, database, databaseLen, cards, cardsLen,
                eValueParams);
   }
-#endif // __CUDACC__
 }
 
 //******************************************************************************
@@ -283,7 +276,6 @@ static void eValuesCpu(double *values, int *scores, Chain *query,
   }
 }
 
-#ifdef SYCL_LANGUAGE_VERSION
 static void eValuesGpu(double *values, int *scores, Chain *query,
                        Chain **database, int databaseLen, int *cards,
                        int cardsLen, EValueParams *params) try {
@@ -362,12 +354,10 @@ static void eValuesGpu(double *values, int *scores, Chain *query,
             << ", line:" << __LINE__ << std::endl;
   std::exit(1);
 }
-#endif // __CUDACC__
 
 //------------------------------------------------------------------------------
 // GPU MODULES
 
-#ifdef SYCL_LANGUAGE_VERSION
 static void kernelProt(double *values, sycl::int2 *data,
                        sycl::nd_item<1> item_ct1, int length_, int queryLen_,
                        double paramsLength_, double paramsLambda_,
@@ -462,7 +452,6 @@ static void kernelDna(double *values, sycl::int2 *data,
     idx += item_ct1.get_group_range(0) * item_ct1.get_local_range(0);
   }
 }
-#endif // __CUDACC__
 
 //------------------------------------------------------------------------------
 

@@ -1,37 +1,29 @@
-CC = g++ -O3 -march=native
+CC = g++  -march=native -O3 
+
+DEP_LIBS = ../lib/libswsharp_$(BIN_OUTPUT).a
 
 ifeq ($(BACK), icpx)
-	CP = icpx -fsycl -fsycl-unnamed-lambda -O3 -fsycl-targets=spir64_x86_64 ../lib/libswsharp.a -march=native
-	CU = icpx -fsycl -fsycl-unnamed-lambda -O3 -fsycl-targets=spir64_x86_64 ../lib/libswsharp.a -march=native
-	LD = icpx -fsycl -fsycl-unnamed-lambda -O3 -fsycl-targets=spir64_x86_64 ../lib/libswsharp.a -match=native
+	CP = icpx -fsycl -fsycl-unnamed-lambda -O3 -fsycl-targets=$(SYCL_TARGETS) $(DEP_LIBS) -DSYCL
 endif
-
 
 ifeq ($(BACK), intel)
-	 CP = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
-	 CU = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
-	 LD = clang++ -fsycl -fsycl-targets=nvptx64-nvidia-cuda,spir64 -fsycl-unnamed-lambda -O3
+	CP = clang++ -fsycl -fsycl-targets=$(SYCL_TARGETS) -fsycl-unnamed-lambda -O3 -DSYCL
 endif
 
-
-ifeq ($(BACK), fpga)
-	CP = icpx -fsycl -fintelfpga -v ../lib/libswsharp.a
-	CU = icpx -fsycl -fintelfpga -v ../lib/libswsharp.a
-	LD = icpx -fsycl -fintelfpga -v ../lib/libswsharp.a
-endif
-
-ifeq ($(BACK), amd)
-	CP = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
-	CU = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
-	LD = clang++ -fsycl -fsycl-targets=spir64_x86_64,amdgcn-amd-amdhsa  -Xsycl-target-backend=amdgcn-amd-amdhsa --offload-arch=gfx1031 -O3 ../lib/libswsharp.a
+ifeq ($(BACK), intel_amd)
+	CP = clang++ -fsycl -fsycl-targets=$(SYCL_TARGETS) -Xsycl-target-backend=$(SYCL_TARGET_BACKEND) --offload-arch=$(SYCL_TARGET_OFFLOAD) -O3 $(DEP_LIBS) -DSYCL
 endif
 
 ifeq ($(BACK), acpp)
-	CP = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
-	CU = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
-	LD = acpp --acpp-targets="generic" -DSYCL_LANGUAGE_VERSION=1 -O3 -DHIP
+	CP = acpp --acpp-targets="$(SYCL_TARGETS)" -O3 -DHIP -DSYCL
 endif
 
+ifeq ($(BACK), fpga)
+	CP = icpx -fsycl -fintelfpga -v $(DEP_LIBS) -DSYCL
+endif
+
+CU = ${CP} 
+LD = ${CP}
 
 DX = doxygen
 
@@ -48,23 +40,22 @@ EXC_DIR = ../bin
 I_CMD = $(addprefix -I, $(SRC_DIR) ../include )
 L_CMD = $(addprefix -L, ../lib )
 
-DEP_LIBS = ../lib/libswsharp.a
 
 CC_FLAGS = $(I_CMD) -O3 -Wall -march=native
 CP_FLAGS = $(CC_FLAGS)
 CU_FLAGS = $(I_CMD) -O3
-LD_FLAGS = $(I_CMD) $(L_CMD) -lswsharp -lpthread -lm -lstdc++
+LD_FLAGS = $(I_CMD) $(L_CMD) -lswsharp_$(BIN_OUTPUT) -lpthread -lm -lstdc++
 
 API = $(addprefix $(SRC_DIR)/, )
 
 SRC = $(shell find $(SRC_DIR) -type f \( -iname \*.cpp -o -iname \*.c \))
 HDR = $(shell find $(SRC_DIR) -type f \( -iname \*.h \))
-OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix .o, $(basename $(SRC))))
+OBJ = $(subst $(SRC_DIR), $(OBJ_DIR), $(addsuffix _$(BIN_OUTPUT).o, $(basename $(SRC))))
 DEP = $(OBJ:.o=.d)
 INC = $(subst $(SRC_DIR), $(INC_DIR), $(API))
-LIB = $(LIB_DIR)/lib$(NAME).a
+LIB = $(LIB_DIR)/lib$(NAME)_$(BIN_OUTPUT).a
 EXC = $(NAME)
-BIN = $(EXC_DIR)/$(EXC)
+BIN = $(EXC_DIR)/$(EXC)_$(BIN_OUTPUT)
 DOC = $(DOC_DIR)/Doxyfile
 #WIN = $(subst $(SRC_DIR), $(WIN_DIR), $(HDR) $(SRC))
 
@@ -93,12 +84,12 @@ $(EXC): $(OBJ) $(DEP_LIBS)
 	@mkdir -p $(dir $@)
 	@$(LD) $(OBJ) -o $@ $(LD_FLAGS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJ_DIR)/%_$(BIN_OUTPUT).o: $(SRC_DIR)/%.c
 	@echo [CC] $<
 	@mkdir -p $(dir $@)
 	@$(CC) $< -c -o $@ -MMD $(CC_FLAGS)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+$(OBJ_DIR)/%_$(BIN_OUTPUT).o: $(SRC_DIR)/%.cpp
 	@echo [CP] $<
 	@mkdir -p $(dir $@)
 	@$(CP) $< -c -o $@ -MMD $(CP_FLAGS)
@@ -129,10 +120,14 @@ docs:
 	
 clean:
 	@echo [RM] cleaning
-	@rm -rf $(OBJ_DIR) $(EXC)
+	@if [ -d "$(OBJ_DIR)" ]; then find $(OBJ_DIR) -name '*_$(BIN_OUTPUT).*' -exec rm -rf {} +; fi
+	@rm -rf $(EXC)
+
 
 remove:
 	@echo [RM] removing
-	@rm -rf $(INC_DIR) $(LIB) $(BIN) $(EXC)
+	@if [ -f "$(LIB)" ]; then rm -rf $(LIB); fi
+	@if [ -f "$(BIN)" ]; then rm -rf $(BIN); fi
+	@if [ -f "$(EXC)" ]; then rm -rf $(EXC); fi
 
 -include $(DEP)

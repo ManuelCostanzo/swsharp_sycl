@@ -25,10 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Contact SW# author by mkorpar@gmail.com.
 
-Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.unlp.edu.ar
+Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar,
+erucci@lidi.info.unlp.edu.ar
 */
 
-#ifndef SYCL_LANGUAGE_VERSION
+#ifndef SYCL
 
 #include "chain.h"
 #include "error.h"
@@ -39,78 +40,72 @@ Contact SW#-SYCL authors by mcostanzo@lidi.info.unlp.edu.ar, erucci@lidi.info.un
 
 static const char *errorMessage = "CUDA not available";
 
-struct ChainDatabaseGpu
-{
-};
+struct ChainDatabaseGpu {};
 
 extern void hwEndDataGpu(int *queryEnd, int *targetEnd, int *outScore,
-                         Chain *query, Chain *target, Scorer *scorer, int score, int card,
-                         Thread *thread)
-{
-    ERROR("%s", errorMessage);
+                         Chain *query, Chain *target, Scorer *scorer, int score,
+                         int card, Thread *thread) {
+  ERROR("%s", errorMessage);
 }
 
 extern void nwFindScoreGpu(int *queryStart, int *targetStart, Chain *query,
-                           int queryFrontGap, Chain *target, Scorer *scorer, int score, int card,
-                           Thread *thread)
-{
-    ERROR("%s", errorMessage);
+                           int queryFrontGap, Chain *target, Scorer *scorer,
+                           int score, int card, Thread *thread) {
+  ERROR("%s", errorMessage);
 }
 
 extern void nwLinearDataGpu(int **scores, int **affines, Chain *query,
-                            int queryFrontGap, Chain *target, int targetFrontGap, Scorer *scorer,
-                            int pLeft, int pRight, int card, Thread *thread)
-{
-    ERROR("%s", errorMessage);
+                            int queryFrontGap, Chain *target,
+                            int targetFrontGap, Scorer *scorer, int pLeft,
+                            int pRight, int card, Thread *thread) {
+  ERROR("%s", errorMessage);
 }
 
 extern void ovEndDataGpu(int *queryEnd, int *targetEnd, int *outScore,
-                         Chain *query, Chain *target, Scorer *scorer, int score, int card,
-                         Thread *thread)
-{
-    ERROR("%s", errorMessage);
+                         Chain *query, Chain *target, Scorer *scorer, int score,
+                         int card, Thread *thread) {
+  ERROR("%s", errorMessage);
 }
 
 extern void ovFindScoreGpu(int *queryStart, int *targetStart, Chain *query,
-                           Chain *target, Scorer *scorer, int score, int card, Thread *thread)
-{
-    ERROR("%s", errorMessage);
+                           Chain *target, Scorer *scorer, int score, int card,
+                           Thread *thread) {
+  ERROR("%s", errorMessage);
 }
 
 extern void swEndDataGpu(int *queryEnd, int *targetEnd, int *outScore,
-                         int **scores, int **affines, Chain *query, Chain *target, Scorer *scorer,
-                         int score, int card, Thread *thread)
-{
-    ERROR("%s", errorMessage);
+                         int **scores, int **affines, Chain *query,
+                         Chain *target, Scorer *scorer, int score, int card,
+                         Thread *thread) {
+  ERROR("%s", errorMessage);
 }
 
-extern ChainDatabaseGpu *chainDatabaseGpuCreate(Chain **database, int databaseLen,
-                                                int *cards, int cardsLen)
-{
-    return NULL;
+extern ChainDatabaseGpu *chainDatabaseGpuCreate(Chain **database,
+                                                int databaseLen, int *cards,
+                                                int cardsLen) {
+  return NULL;
 }
 
-extern void chainDatabaseGpuDelete(ChainDatabaseGpu *chainDatabaseGpu)
-{
-}
+extern void chainDatabaseGpuDelete(ChainDatabaseGpu *chainDatabaseGpu) {}
 
-extern size_t chainDatabaseGpuMemoryConsumption(Chain **database, int databaseLen)
-{
-    return 0;
+extern size_t chainDatabaseGpuMemoryConsumption(Chain **database,
+                                                int databaseLen) {
+  return 0;
 }
 
 extern void scoreDatabaseGpu(int **scores, int type, Chain *query,
-                             ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer, int *indexes,
-                             int indexesLen, int *cards, int cardsLen, Thread *thread)
-{
-    ERROR("%s", errorMessage);
+                             ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
+                             int *indexes, int indexesLen, int *cards,
+                             int cardsLen, Thread *thread) {
+  ERROR("%s", errorMessage);
 }
 
 extern void scoreDatabasesGpu(int **scores, int type, Chain **queries,
-                              int queriesLen, ChainDatabaseGpu *chainDatabaseGpu, Scorer *scorer,
-                              int *indexes, int indexesLen, int *cards, int cardsLen, Thread *thread)
-{
-    ERROR("%s", errorMessage);
+                              int queriesLen,
+                              ChainDatabaseGpu *chainDatabaseGpu,
+                              Scorer *scorer, int *indexes, int indexesLen,
+                              int *cards, int cardsLen, Thread *thread) {
+  ERROR("%s", errorMessage);
 }
 
 #endif // __CUDACC__
