@@ -402,8 +402,6 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
 
   int useGpu = indexes == NULL || indexesLen > 100;
 
-  int withThread = !useGpu || withThreads();
-
   //**************************************************************************
   // FILTER LONG INDEXES
 
@@ -444,10 +442,7 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
   TIMER_START("Database solving GPU");
 
   Thread thread;
-
-  if (withThread) {
-    threadCreate(&thread, scoreCpu, (void *)&contextCpu);
-  }
+  threadCreate(&thread, scoreCpu, (void *)&contextCpu);
 
   if (useGpu) {
 
@@ -466,20 +461,18 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
     TIMER_STOP;
 
     int longInexesSolved = 0;
-    if (withThread) {
-      mutexLock(contextCpu.mutex);
+    mutexLock(contextCpu.mutex);
 
-      longInexesSolved = contextCpu.lastIndexSolved;
-      contextCpu.cancelled = 1;
+    longInexesSolved = contextCpu.lastIndexSolved;
+    contextCpu.cancelled = 1;
 
-      mutexUnlock(contextCpu.mutex);
-    }
+    mutexUnlock(contextCpu.mutex);
 
     LOG("Long indexes solved CPU: %d", longInexesSolved);
 
     TIMER_START("Long solve");
 
-    if (!withThread || (withThread && longInexesSolved < longIndexesNewLen)) {
+    if (longInexesSolved < longIndexesNewLen) {
       scoreLongDatabasesGpu(scores, type, queries, queriesLen, longDatabase,
                             scorer, longIndexesNew + longInexesSolved,
                             longIndexesNewLen - longInexesSolved, cards,
@@ -489,9 +482,7 @@ static void scoreDatabaseThread(int *scores, int type, Chain **queries,
     TIMER_STOP;
   }
 
-  if (withThread) {
-    threadJoin(thread);
-  }
+  threadJoin(thread);
 
   TIMER_STOP;
 
