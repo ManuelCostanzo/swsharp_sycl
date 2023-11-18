@@ -10,9 +10,9 @@ execute_command() {
     local card=$2
     local file=$3
 
-    for i in {1..10}; do
+    for i in {1..5}; do
         echo "Ejecución número $i para $file"
-        ../SYCL/bin/swsharpdb_$bin -i ../databases/protein/queries/query_sequences_20.fasta -j ../databases/protein/uniprot_sprot.fasta -g 10 -e 2 -T 0  --nocache --max-aligns=10 --cards=$card >> CMMSE/$file.txt
+        ../SYCL/bin/swsharpdb_$bin -i ../databases/protein/queries/query_sequences_20 -j ../databases/protein/uniprot_sprot.fasta -g 10 -e 2 -T 0  --nocache --max-aligns=10 --cards=$card >> CMMSE/$file.txt
     done
 }
 
@@ -28,5 +28,3 @@ for key in "${!configs[@]}"; do
 
     execute_command $bin $card $file
 done
-
-
